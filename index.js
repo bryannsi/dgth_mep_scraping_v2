@@ -1,13 +1,10 @@
 import { scrapeVacantesMEP } from "./src/scrapers/scraper.js";
 
-const KEYWORDS = [];
+const keywords = ["MATEMÁTICA", "INFORMÁTICA"];
 
-(async () => {
-  try {
-    const allData = await scrapeVacantesMEP({ KEYWORDS: [] });
-    console.log("📌 Resultado sin filtro:");
-    console.dir(allData, { depth: 2 });
-  } catch (e) {
-    console.error("Error principal:", e);
-  }
-})();
+scrapeVacantesMEP(keywords, false)
+  .then((vacantes) => {
+    console.log("\n--- RESULTADOS ---");
+    console.dir(vacantes);
+  })
+  .catch((err) => console.error(err));

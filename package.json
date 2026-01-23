@@ -1,0 +1,19 @@
+{
+  "name": "dgth_mep_scraping_v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.9.0",
+  "dependencies": {
+    "nodemon": "^3.1.11",
+    "puppeteer": "^24.35.0"
+  }
+}

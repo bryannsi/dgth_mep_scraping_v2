@@ -2,15 +2,12 @@ name: MEP Scraping Cron Job
 
 on:
   schedule:
-    # Los horarios están ajustados a la zona horaria de Costa Rica (UTC-6)
     # 7:00 AM CR -> 13:00 UTC
     - cron: "0 13 * * *"
     # 11:00 AM CR -> 17:00 UTC
     - cron: "0 17 * * *"
     # 3:30 PM CR -> 21:30 UTC
     - cron: "30 21 * * *"
-
-  # Permite ejecutarlo manualmente desde la web de GitHub
   workflow_dispatch:
 
 jobs:
@@ -28,22 +25,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "23"
-          cache: pnpm
+          cache: "pnpm"
 
       - name: Instalar dependencias de Node
         run: pnpm install --frozen-lockfile
 
-      - name: Instalar Navegador y Librerías del Sistema
-        # Este comando es vital: instala Chrome y las dependencias (librerías)
-        # que le faltan al servidor de GitHub para que el navegador funcione.
-        run: npx puppeteer browsers install chrome@latest --install-deps
+      - name: Instalar dependencias del sistema (Librerías de Linux)
+        # CORRECCIÓN: Instalamos manualmente las dependencias con sudo antes de bajar Chrome.
+        # Esto evita el error de "requires root privileges".
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgbm1 libasound2t64 libatk1.0-0 libatk-bridge2.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1-0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget
+
+      - name: Instalar Navegador Chrome
+        # Ahora bajamos el navegador sin el flag --install-deps porque ya lo hicimos arriba con sudo.
+        run: npx puppeteer browsers install chrome@latest
 
       - name: Ejecutar Build (esbuild)
-        # Esto limpia tu código: quita consoles, comentarios y genera build/index.js
         run: pnpm run build
 
       - name: Ejecutar Scraping
-        # Ejecutamos la versión minificada y limpia
         run: node build/index.js
-        env:
-          NODE_ENV: production
+        

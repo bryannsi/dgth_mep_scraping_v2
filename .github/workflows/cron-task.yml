@@ -23,9 +23,6 @@ jobs:
 
       - name: Instalar pnpm
         uses: pnpm/action-setup@v4
-        with:
-          # Según tu package.json pnpm@10.9.0
-          version: 10
 
       - name: Configurar Node.js 23
         uses: actions/setup-node@v4

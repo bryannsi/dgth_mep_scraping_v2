@@ -1,0 +1,52 @@
+name: MEP Scraping Cron Job
+
+on:
+  schedule:
+    # Los horarios están ajustados a la zona horaria de Costa Rica (UTC-6)
+    # 7:00 AM CR -> 13:00 UTC
+    - cron: "0 13 * * *"
+    # 11:00 AM CR -> 17:00 UTC
+    - cron: "0 17 * * *"
+    # 3:30 PM CR -> 21:30 UTC
+    - cron: "30 21 * * *"
+
+  # Permite ejecutarlo manualmente desde la web de GitHub
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          # Según tu package.json pnpm@10.9.0
+          version: 10
+
+      - name: Configurar Node.js 23
+        uses: actions/setup-node@v4
+        with:
+          node-version: "23"
+          cache: pnpm
+
+      - name: Instalar dependencias de Node
+        run: pnpm install --frozen-lockfile
+
+      - name: Instalar Navegador y Librerías del Sistema
+        # Este comando es vital: instala Chrome y las dependencias (librerías)
+        # que le faltan al servidor de GitHub para que el navegador funcione.
+        run: npx puppeteer browsers install chrome --install-deps
+
+      - name: Ejecutar Build (esbuild)
+        # Esto limpia tu código: quita consoles, comentarios y genera build/index.js
+        run: pnpm run build
+
+      - name: Ejecutar Scraping
+        # Ejecutamos la versión minificada y limpia
+        run: node build/index.js
+        env:
+          NODE_ENV: production

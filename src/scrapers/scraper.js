@@ -1,12 +1,12 @@
 import puppeteer from "puppeteer";
+import { MEP_URL, PUPPETEER_CONFIG } from "../config//config.js";
 import {
   extractTableData,
   filterVacancies,
   getRegions,
 } from "../helpers//helpers.js";
-import { MEP_URL, PUPPETEER_CONFIG } from "../config//config.js";
 
-export async function scrapeVacantesMEP(keywords = [], mode = "new") {
+export async function scrapeVacantesMEP(keywords = []) {
   // 1. Normalize filters (Tu lógica original)
   let searchTerms = [];
   if (Array.isArray(keywords)) {
@@ -15,7 +15,7 @@ export async function scrapeVacantesMEP(keywords = [], mode = "new") {
     searchTerms = [keywords.toUpperCase()];
   }
 
-  const browser = await puppeteer.launch(PUPPETEER_CONFIG(mode));
+  const browser = await puppeteer.launch(PUPPETEER_CONFIG());
   const page = await browser.newPage();
 
   try {

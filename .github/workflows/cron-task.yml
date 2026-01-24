@@ -36,7 +36,7 @@ jobs:
       - name: Instalar Navegador y Librerías del Sistema
         # Este comando es vital: instala Chrome y las dependencias (librerías)
         # que le faltan al servidor de GitHub para que el navegador funcione.
-        run: npx puppeteer browsers install chrome --install-deps
+        run: npx puppeteer browsers install chrome@latest --install-deps
 
       - name: Ejecutar Build (esbuild)
         # Esto limpia tu código: quita consoles, comentarios y genera build/index.js

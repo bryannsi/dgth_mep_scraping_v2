@@ -1,6 +1,6 @@
-import { scrapeVacantesMEP } from "./src/scrapers/scraper.js";
+import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 
-const keywords = ["MATEMÁTICA", "INFORMÁTICA"];
+const keywords = ["RED", "INFORMÁTICA", "SOFTWARE", "DISPOSITIVO", "SEGURIDAD"];
 
 scrapeVacantesMEP(keywords, false)
   .then((vacantes) => {

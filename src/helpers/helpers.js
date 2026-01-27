@@ -14,30 +14,61 @@ export async function getRegions(page) {
 /** Extrae los datos de la tabla visible en la página */
 export async function extractTableData(page) {
   return await page.evaluate(() => {
+    // Definimos la función de normalización localmente dentro del navegador
+    const normalizeValue = (str) => {
+      if (!str) return "";
+      return str
+        .toString()
+        .replace(/\u00a0/g, " ") // Cambia espacios raros de HTML por espacios normales
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .trim();
+    };
+
     const headers = Array.from(document.querySelectorAll("table thead th")).map(
-      (header) => header.textContent.trim(),
+      (th) => normalizeValue(th.textContent),
     );
 
     const rows = Array.from(document.querySelectorAll("table tbody tr"));
 
-    return rows.map((row) => {
-      const cells = Array.from(row.querySelectorAll("td"));
-      const obj = {};
-      headers.forEach((header, index) => {
-        obj[header] = cells[index]?.textContent.trim() || "";
-      });
-      return obj;
-    });
+    return rows
+      .map((tr) => {
+        const cells = Array.from(tr.querySelectorAll("td"));
+        const obj = {};
+        headers.forEach((header, index) => {
+          const key = header || `COL_${index}`;
+          obj[header] = cells[index]?.textContent.trim() || "";
+        });
+        return obj;
+      })
+      .filter((row) => row.VACANTE && row.VACANTE !== "");
   });
 }
 
 /** Aplica el filtro de palabras clave a las filas encontradas */
 export function filterVacancies(rows, searchTerms) {
-  if (searchTerms.length === 0) return rows;
+  if (!searchTerms?.length) return rows;
+  const normalizedSearchTerms = searchTerms.map(normalizeValue);
 
   return rows.filter((row) => {
-    // Usamos optional chaining y aseguramos que sea string
-    const specialty = row.Especialidad?.toString().toUpperCase() || "";
-    return searchTerms.some((term) => specialty.includes(term));
+    // Accedemos a la llave estandarizada en la extracción
+    const originalValue = row.ESPECIALIDAD || "";
+    const cleanValue = normalizeValue(originalValue);
+
+    // Compara el texto limpio de la web contra tus términos limpios
+    return normalizedSearchTerms.some((term) => cleanValue.includes(term));
   });
 }
+
+const normalizeValue = (str) => {
+  if (!str) return "";
+  return str
+    .toString()
+    .replace(/\u00a0/g, " ") // Cambia espacios raros de HTML por espacios normales
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .trim()
+    .toUpperCase();
+};

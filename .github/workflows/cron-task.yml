@@ -39,3 +39,10 @@ jobs:
 
       - name: Ejecutar Scraping
         run: node build/index.js
+
+      - name: Subir resultados del Scraping
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-mep-json
+          path: data/vacantes_mep.json
+          retention-days: 2  # El archivo estará disponible por 7 días

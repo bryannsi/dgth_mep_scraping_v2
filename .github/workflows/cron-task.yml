@@ -30,20 +30,12 @@ jobs:
       - name: Instalar dependencias de Node
         run: pnpm install --frozen-lockfile
 
-      - name: Instalar dependencias del sistema (Librerías de Linux)
-        # CORRECCIÓN: Instalamos manualmente las dependencias con sudo antes de bajar Chrome.
-        # Esto evita el error de "requires root privileges".
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgbm1 libasound2t64 libatk1.0-0 libatk-bridge2.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1-0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget
-
-      - name: Instalar Navegador Chrome
-        # Ahora bajamos el navegador sin el flag --install-deps porque ya lo hicimos arriba con sudo.
-        run: npx puppeteer browsers install chrome@latest
+      - name: Instalar Navegador y Librerías (Chrome)
+        # Esta es la línea clave corregida
+        run: sudo npx puppeteer browsers install chrome --install-deps
 
       - name: Ejecutar Build (esbuild)
         run: pnpm run build
 
       - name: Ejecutar Scraping
         run: node build/index.js
-        

@@ -7,6 +7,7 @@ async function buildProject() {
   try {
     await esbuild.build({
       entryPoints: ["src/index.js"],
+      bundle: true, // Esto es vital para unir todos tus archivos .js
       minify: true,
       platform: "node",
       format: "esm",
@@ -14,7 +15,11 @@ async function buildProject() {
       drop: ["console", "debugger"],
       legalComments: "none",
       outfile: "build/index.js",
-      plugins: [nodeExternalsPlugin()],
+      plugins: [
+        nodeExternalsPlugin({
+          allowList: [], // Asegura que NINGÚN archivo de tu carpeta /src sea tratado como externo
+        }),
+      ],
     });
 
     console.log("✅ Build completado exitosamente en /build/index.js");

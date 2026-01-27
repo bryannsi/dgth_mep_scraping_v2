@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node ./build/index.js",
     "dev": "node --watch --watch-path=src ./src/index.js",
-    "build": "node build.js"
+    "build": "node -e \"import('fs').then(fs => fs.rmSync('build', { recursive: true, force: true }))\" && node build.js"
   },
   "keywords": [],
   "author": "Bryan Chavarría Hughes",

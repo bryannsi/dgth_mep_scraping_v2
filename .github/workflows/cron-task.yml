@@ -32,7 +32,9 @@ jobs:
 
       - name: Instalar Navegador y Librerías (Chrome)
         # Esta es la línea clave corregida
-        run: sudo npx puppeteer browsers install chrome --install-deps
+        run: |
+          pnpm exec puppeteer browsers install chrome
+          sudo npx puppeteer browsers install chrome --install-deps
 
       - name: Ejecutar Build (esbuild)
         run: pnpm run build
@@ -40,9 +42,12 @@ jobs:
       - name: Ejecutar Scraping
         run: node build/index.js
 
+        env:
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+
       - name: Subir resultados del Scraping
         uses: actions/upload-artifact@v4
         with:
           name: resultados-mep-json
           path: data/vacantes_mep.json
-          retention-days: 2  # El archivo estará disponible por 7 días
+          retention-days: 2 # El archivo estará disponible por 7 días

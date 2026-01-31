@@ -1,26 +1,50 @@
 import path from "path";
+import { fileURLToPath } from "url";
+import { CONFIG } from "./config/config.js";
 import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 import { jsonExport } from "./services/exportService.js";
+import { sendEmail } from "./services/mailService.js";
+import { createHtmlTable } from "./services/renderService.js";
+import TemplateService from "./services/templateService.js";
 
-
-const OUTPUT_DIR = "./data";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const OUTPUT_DIR = path.join(__dirname, "data");
 const FILE_NAME = "vacantes_mep.json";
 const FILE_PATH = path.join(OUTPUT_DIR, FILE_NAME);
 
-const keywords = ["RED", "INFORMÁTICA", "SOFTWARE", "DISPOSITIVO", "SEGURIDAD"];
-// const keywords = [];
 async function main() {
   console.log("🚀 Iniciando MEP Scraping Service...");
   const startTime = Date.now();
-
+  console.log(`🚀 Iniciando búsqueda con: ${CONFIG.scraper.keywords.join(", ")}`);
   try {
-    const data = await scrapeVacantesMEP(keywords);
+    const data = await scrapeVacantesMEP(CONFIG.scraper.keywords);
 
-    // 3. Validar y Exportar
     if (data && data.length > 0) {
       console.log(`📊 Se encontraron ${data.length} vacantes en total.`);
 
+      // 1. Guardar JSON
       jsonExport(FILE_PATH, data);
+
+      // 2. Crear Tabla HTML
+      const tablaHTML = createHtmlTable(data);
+
+      // 3. Preparar Template
+      const engine = new TemplateService();
+      const mailContent = engine.getMailTemplate(
+        "template1",
+        { name: FILE_NAME, path: FILE_PATH },
+        tablaHTML,
+      );
+
+      // 4. Enviar Correo
+      console.log("📧 Enviando correo...");
+      const result = await sendEmail(mailContent);
+      if (result.accepted.length > 0) {
+        console.log(
+          `✅ Correo enviado exitosamente a: ${CONFIG.mail.destination}`,
+        );
+      }
+      console.log("✅ Proceso completado con éxito.");
     } else {
       console.log(
         "⚠️ No se encontraron vacantes que coincidan con los criterios.",

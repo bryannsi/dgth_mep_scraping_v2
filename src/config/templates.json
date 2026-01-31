@@ -1,0 +1,7 @@
+{
+  "template1": {
+    "subject": "🚀 Reporte de Vacantes MEP Encontradas",
+    "to": "bryannsi@outlook.com",
+    "html": "<h3>Resumen de vacantes encontradas:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>"
+  }
+}

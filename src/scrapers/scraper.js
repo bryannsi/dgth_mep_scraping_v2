@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer";
-import { MEP_URL, PUPPETEER_CONFIG } from "../config//config.js";
+import { CONFIG } from "../config/config.js";
 import {
   extractTableData,
   filterVacancies,
@@ -15,11 +15,11 @@ export async function scrapeVacantesMEP(keywords = []) {
     searchTerms = [keywords.toUpperCase()];
   }
 
-  const browser = await puppeteer.launch(PUPPETEER_CONFIG());
+  const browser = await puppeteer.launch(CONFIG.puppeteer);
   const page = await browser.newPage();
 
   try {
-    await page.goto(MEP_URL, { waitUntil: "networkidle2" });
+    await page.goto(CONFIG.scraper.url, { waitUntil: "networkidle2" });
     await page.waitForSelector("select");
 
     const regions = await getRegions(page);
@@ -38,8 +38,22 @@ export async function scrapeVacantesMEP(keywords = []) {
       // Aplicar tu filtro original
       const filteredRows = filterVacancies(tableRows, searchTerms);
 
-      console.log(`✔ ${filteredRows.length} results in ${region.text}`);
+      console.log(
+        `✨ ¡ÉXITO! Encontradas ${filteredRows.length} vacantes en ${region.text}`,
+      );
       results.push(...filteredRows);
+      // if (filteredRows.length > 0) {
+      //   console.log(
+      //     `✨ ¡ÉXITO! Encontradas ${filteredRows.length} vacantes en ${region.text}`,
+      //   );
+      //   results.push(...filteredRows);
+
+      //   // --- LÓGICA DE SALIDA RÁPIDA ---
+      //   console.log("🛑 Deteniendo búsqueda para prueba rápida...");
+      //   break; // <--- Sale del bucle for ni bien encuentra algo
+      // } else {
+      //   console.log(`❌ Sin coincidencias en ${region.text}`);
+      // }
     }
 
     return results;

@@ -7,12 +7,12 @@ async function buildProject() {
   try {
     await esbuild.build({
       entryPoints: ["src/index.js"],
-      bundle: true, // Esto es vital para unir todos tus archivos .js
+      bundle: true,
       minify: true,
       platform: "node",
       format: "esm",
       target: ["node23"],
-      // drop: ["console", "debugger"],
+      drop: ["console", "debugger"],
       legalComments: "none",
       outfile: "build/index.js",
       plugins: [

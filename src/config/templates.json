@@ -1,7 +1,14 @@
 {
   "template1": {
-    "subject": "🚀 Reporte de Vacantes MEP Encontradas",
+    "subject": "🚀 Reporte de Vacantes - Sistemas y Seguridad",
     "to": "bryannsi@outlook.com",
-    "html": "<h3>Resumen de vacantes encontradas:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>"
+    "html": "<h3>Vacantes de Sistemas y Seguridad:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>",
+    "keywords": ["INFORMATICA", "SEGURIDAD", "RED", "SOFTWARE", "DISPOSITIVO"]
+  },
+  "template2": {
+    "subject": "🚀 Reporte de Vacantes - Ingles y Religion",
+    "to": "bryannsi@gmail.com",
+    "html": "<h3>Vacantes de Ingles y Religion:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>",
+    "keywords": ["INGLES", "RELIGION"]
   }
 }

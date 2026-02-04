@@ -1,9 +1,7 @@
 import path from "path";
-import { filterVacancies } from "./helpers/helpers.js";
 import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 import { jsonExport } from "./services/exportService.js";
-import { sendEmail } from "./services/mailService.js";
-import { createHtmlTable } from "./services/renderService.js";
+import { NotificationService } from "./services/notificationService.js";
 import TemplateService from "./services/templateService.js";
 
 const __dirname = import.meta.dirname;
@@ -15,66 +13,24 @@ async function main() {
   console.log("🚀 Iniciando MEP Scraping Service...");
   const startTime = Date.now();
 
-  // 1. Obtener todas las keywords de todos los templates
+  // 1. Inicializar Servicios
   const templateService = new TemplateService();
-  const templates = templateService.templates;
-  const allKeywords = [
-    ...new Set(Object.values(templates).flatMap((t) => t.keywords || [])),
-  ];
-
-  console.log(`🚀 Iniciando búsqueda con: ${allKeywords.join(", ")}`);
+  const notificationService = new NotificationService(templateService);
 
   try {
-    const data = await scrapeVacantesMEP(allKeywords);
+    const data = await scrapeVacantesMEP();
 
     if (data && data.length > 0) {
       console.log(`📊 Se encontraron ${data.length} vacantes en total.`);
 
-      // 1. Guardar JSON
+      // 3. Guardar JSON
       jsonExport(FILE_PATH, data);
 
-      // 2. Preparar envíos en paralelo usando Promise.all
-      const emailPromises = Object.entries(templates).map(
-        async ([tplName, tplConfig]) => {
-          const tplKeywords = tplConfig.keywords || [];
-          const tplRegions = tplConfig.regions || [];
-          const filteredData = filterVacancies(data, tplKeywords, tplRegions);
-
-          if (filteredData.length > 0) {
-            console.log(
-              `\n📨 Procesando "${tplName}" (${filteredData.length} vacantes)...`,
-            );
-
-            // Crear Tabla HTML
-            const tablaHTML = createHtmlTable(filteredData);
-
-            // Preparar Template
-            const mailContent = templateService.getMailTemplate(
-              tplName,
-              { name: FILE_NAME, path: FILE_PATH },
-              tablaHTML,
-            );
-
-            //4. Enviar Correo
-            console.log(`📧 Enviando correo para ${tplName}...`);
-            const result = await sendEmail(mailContent);
-            if (result.accepted.length > 0) {
-              console.log(`✅ Correo enviado a: ${tplConfig.to}`);
-            }
-            return { tplName, success: true };
-          } else {
-            console.log(
-              `\n⚠️ "${tplName}" no tuvo coincidencias. Saltando envio.`,
-            );
-            return { tplName, success: false, reason: "no_matches" };
-          }
-        },
-      );
-
-      // Ejecutar todos los envíos en paralelo
-      await Promise.all(emailPromises);
-
-      console.log("\n✅ Proceso de envío completado.");
+      // 4. Procesar Notificaciones (Filtrar, Generar HTML, Enviar Correos)
+      await notificationService.processNotifications(data, {
+        name: FILE_NAME,
+        path: FILE_PATH,
+      });
     } else {
       console.log(
         "⚠️ No se encontraron vacantes que coincidan con los criterios.",

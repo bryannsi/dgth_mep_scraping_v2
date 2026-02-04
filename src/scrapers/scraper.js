@@ -1,20 +1,8 @@
 import puppeteer from "puppeteer";
 import { CONFIG } from "../config/config.js";
-import {
-  extractTableData,
-  filterVacancies,
-  getRegions,
-} from "../helpers//helpers.js";
+import { extractTableData, getRegions } from "../helpers//helpers.js";
 
-export async function scrapeVacantesMEP(keywords = []) {
-  // 1. Normalize filters (Tu lógica original)
-  let searchTerms = [];
-  if (Array.isArray(keywords)) {
-    searchTerms = keywords.map((f) => String(f).toUpperCase());
-  } else if (typeof keywords === "string") {
-    searchTerms = [keywords.toUpperCase()];
-  }
-
+export async function scrapeVacantesMEP() {
   const browser = await puppeteer.launch(CONFIG.puppeteer);
   const page = await browser.newPage();
 
@@ -35,13 +23,10 @@ export async function scrapeVacantesMEP(keywords = []) {
 
       const tableRows = await extractTableData(page);
 
-      // Aplicar tu filtro original
-      const filteredRows = filterVacancies(tableRows, searchTerms);
-
       console.log(
-        `✨ ¡ÉXITO! Encontradas ${filteredRows.length} vacantes en ${region.text}`,
+        `✨ ¡ÉXITO! Encontradas ${tableRows.length} vacantes en ${region.text}`,
       );
-      results.push(...filteredRows);
+      results.push(...tableRows);
       // if (filteredRows.length > 0) {
       //   console.log(
       //     `✨ ¡ÉXITO! Encontradas ${filteredRows.length} vacantes en ${region.text}`,

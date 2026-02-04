@@ -145,4 +145,4 @@ dist
 
 #build code
 /build
-src/services/exportService.js
+src/data/vacantes_mep.json

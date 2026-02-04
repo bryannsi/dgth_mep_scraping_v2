@@ -9,6 +9,7 @@
     "subject": "🚀 Reporte de Vacantes - Ingles y Religion",
     "to": "bryannsi@gmail.com",
     "html": "<h3>Vacantes de Ingles y Religion:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>",
-    "keywords": ["INGLES", "RELIGION"]
+    "keywords": ["INGLES", "RELIGION"],
+    "regions": ["DESAMPARADOS"]
   }
 }

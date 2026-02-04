@@ -12,6 +12,7 @@ export async function scrapeVacantesMEP() {
 
     const regions = await getRegions(page);
     const results = [];
+    const seenIds = new Set();
 
     for (const region of regions) {
       console.log(`📍 Procesando región: ${region.text}`);
@@ -23,10 +24,16 @@ export async function scrapeVacantesMEP() {
 
       const tableRows = await extractTableData(page);
 
-      console.log(
-        `✨ ¡ÉXITO! Encontradas ${tableRows.length} vacantes en ${region.text}`,
+      // Filtrar duplicados y actualizar la lista de IDs vistos
+      const newVacancies = tableRows.filter(
+        (row) => row.VACANTE && !seenIds.has(row.VACANTE),
       );
-      results.push(...tableRows);
+      newVacancies.forEach((row) => seenIds.add(row.VACANTE));
+      results.push(...newVacancies);
+
+      console.log(
+        `✨ ¡ÉXITO! Encontradas ${tableRows.length} vacantes en ${region.text} (${newVacancies.length} nuevas)`,
+      );
       // if (filteredRows.length > 0) {
       //   console.log(
       //     `✨ ¡ÉXITO! Encontradas ${filteredRows.length} vacantes en ${region.text}`,

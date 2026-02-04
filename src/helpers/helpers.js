@@ -47,9 +47,16 @@ export async function extractTableData(page) {
 }
 
 /** Aplica el filtro de palabras clave a las filas encontradas */
-export function filterVacancies(rows, searchTerms) {
-  if (!searchTerms?.length) return rows;
-  const normalizedSearchTerms = searchTerms.map(normalizeValue);
+export function filterVacancies(rows, searchTerms, allowedRegions = []) {
+  // Si no hay filtros, devolver todo (comportamiento original, aunque raro si no hay keywords)
+  if (!searchTerms?.length && !allowedRegions?.length) return rows;
+
+  const normalizedSearchTerms = searchTerms
+    ? searchTerms.map(normalizeValue)
+    : [];
+  const normalizedRegions = allowedRegions
+    ? allowedRegions.map(normalizeValue)
+    : [];
 
   return rows.filter((row) => {
     // Accedemos a la llave estandarizada en la extracción
@@ -57,7 +64,24 @@ export function filterVacancies(rows, searchTerms) {
     const cleanValue = normalizeValue(originalValue);
 
     // Compara el texto limpio de la web contra tus términos limpios
-    return normalizedSearchTerms.some((term) => cleanValue.includes(term));
+    // 1. Filtro por Keywords (Specialty) - Solo si hay keywords definidas
+    const matchesKeyword =
+      normalizedSearchTerms.length === 0 ||
+      normalizedSearchTerms.some((term) => cleanValue.includes(term));
+
+    // 2. Filtro por Región - Solo si hay regiones definidas
+    // Si no se especifican regiones, asumimos que TODAS son válidas (no filtra por región)
+    // Nota: "Dirección Regional" se normaliza a "DIRECCION REGIONAL"
+    const rowRegion = normalizeValue(
+      row["DIRECCION REGIONAL"] || row["REGION"] || "",
+    );
+    const matchesRegion =
+      normalizedRegions.length === 0 ||
+      normalizedRegions.some((reg) => rowRegion.includes(reg));
+
+    // Si ambos filtros están vacíos, devuelve true (todo match).
+    // Si uno está vacío, ese filtro es true y solo depende del otro.
+    return matchesKeyword && matchesRegion;
   });
 }
 

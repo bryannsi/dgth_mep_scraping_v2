@@ -37,7 +37,8 @@ async function main() {
       const emailPromises = Object.entries(templates).map(
         async ([tplName, tplConfig]) => {
           const tplKeywords = tplConfig.keywords || [];
-          const filteredData = filterVacancies(data, tplKeywords);
+          const tplRegions = tplConfig.regions || [];
+          const filteredData = filterVacancies(data, tplKeywords, tplRegions);
 
           if (filteredData.length > 0) {
             console.log(
@@ -54,7 +55,7 @@ async function main() {
               tablaHTML,
             );
 
-          //4. Enviar Correo
+            //4. Enviar Correo
             console.log(`📧 Enviando correo para ${tplName}...`);
             const result = await sendEmail(mailContent);
             if (result.accepted.length > 0) {

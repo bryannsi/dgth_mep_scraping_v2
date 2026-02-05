@@ -2,7 +2,6 @@ import nodemailer from "nodemailer";
 import { CONFIG } from "../config/config.js";
 
 export async function sendEmail(mailConfig) {
-
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -17,6 +16,7 @@ export async function sendEmail(mailConfig) {
   const options = {
     from: CONFIG.mail.user,
     to: mailConfig.to,
+    cc: mailConfig.cc,
     subject: mailConfig.subject,
     html: mailConfig.html,
     attachments: mailConfig.attachments,

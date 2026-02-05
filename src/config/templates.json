@@ -8,7 +8,15 @@
   "template2": {
     "subject": "🚀 Reporte de Vacantes - Secretariado, Ejecutivo y Servicio al cliente",
     "to": "raquel.bu96@gmail.com",
+    "cc": "bryannsi@gmail.com",
     "html": "<h3>Vacantes de Secretariado, Ejecutivo y Servicio al cliente:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>",
     "keywords": ["SECRETARIADO", "EJECUTIVO", "COMERCIAL","CLIENTE"]
+  },
+   "template3": {
+    "subject": "🚀 Reporte de Vacantes - Educación Física",
+    "to": "fabianr2605@gmail.com",
+    "cc": "bryannsi@gmail.com",
+    "html": "<h3>Vacantes de Educación Física:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>",
+    "keywords": ["EDUCACION FISICA"]
   }
 }

@@ -18,7 +18,8 @@ async function main() {
   const notificationService = new NotificationService(templateService);
 
   try {
-    const data = await scrapeVacantesMEP();
+    const allowedRegions = templateService.getAllRegions();
+    const data = await scrapeVacantesMEP(allowedRegions);
 
     if (data && data.length > 0) {
       console.log(`📊 Se encontraron ${data.length} vacantes en total.`);

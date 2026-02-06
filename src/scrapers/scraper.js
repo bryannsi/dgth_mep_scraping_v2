@@ -2,7 +2,7 @@ import puppeteer from "puppeteer";
 import { CONFIG } from "../config/config.js";
 import { extractTableData, getRegions } from "../helpers//helpers.js";
 
-export async function scrapeVacantesMEP() {
+export async function scrapeVacantesMEP(allowedRegions = []) {
   const browser = await puppeteer.launch(CONFIG.puppeteer);
   const page = await browser.newPage();
 
@@ -14,10 +14,37 @@ export async function scrapeVacantesMEP() {
     const results = [];
     const seenIds = new Set();
 
-    for (const region of regions) {
+    // Filtrar regiones si se proporcionó una lista
+    const regionsToProcess =
+      allowedRegions.length > 0
+        ? regions.filter((r) => {
+            const normalizedText = r.text.toUpperCase();
+            return allowedRegions.some((allowed) =>
+              normalizedText.includes(allowed.toUpperCase()),
+            );
+          })
+        : regions;
+
+    if (allowedRegions.length > 0) {
+      console.log(
+        `🎯 Filtrando scraping para regiones: ${allowedRegions.join(", ")}`,
+      );
+      console.log(`✅ ${regionsToProcess.length} regiones coinciden.`);
+    }
+
+    for (const region of regionsToProcess) {
       console.log(`📍 Procesando región: ${region.text}`);
 
-      await page.select("select", region.value);
+      // Usar evaluate para asegurar que se dispare el evento 'change' (necesario en algunos entornos Blazor)
+      await page.evaluate((val) => {
+        const select =
+          document.querySelector("#regionalSelect") ||
+          document.querySelector("select");
+        if (select) {
+          select.value = val;
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      }, region.value);
 
       // Pagination loop
       let hasNextPage = true;

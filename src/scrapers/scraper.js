@@ -19,21 +19,46 @@ export async function scrapeVacantesMEP() {
 
       await page.select("select", region.value);
 
-      // Wait for the table to load (Tu timeout original)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Pagination loop
+      let hasNextPage = true;
+      let pageNum = 1;
 
-      const tableRows = await extractTableData(page);
+      while (hasNextPage) {
+        console.log(`📄 Procesando página ${pageNum} de ${region.text}`);
 
-      // Filtrar duplicados y actualizar la lista de IDs vistos
-      const newVacancies = tableRows.filter(
-        (row) => row.VACANTE && !seenIds.has(row.VACANTE),
-      );
-      newVacancies.forEach((row) => seenIds.add(row.VACANTE));
-      results.push(...newVacancies);
+        // Wait for table to be visible/updated
+        await new Promise((resolve) => setTimeout(resolve, 5000));
 
-      console.log(
-        `✨ ¡ÉXITO! Encontradas ${tableRows.length} vacantes en ${region.text} (${newVacancies.length} nuevas)`,
-      );
+        const tableRows = await extractTableData(page);
+
+        // Filtrar duplicados y actualizar la lista de IDs vistos
+        const newVacancies = tableRows.filter(
+          (row) => row.VACANTE && !seenIds.has(row.VACANTE),
+        );
+        newVacancies.forEach((row) => seenIds.add(row.VACANTE));
+        results.push(...newVacancies);
+
+        console.log(
+          `✨ Encontradas ${tableRows.length} vacantes en pág ${pageNum} (${newVacancies.length} nuevas)`,
+        );
+
+        // Check for next page button
+        // selector for enabled next button: button[aria-label="Next page"]:not([disabled])
+        const nextButton = await page.$(
+          'button[aria-label="Next page"]:not([disabled])',
+        );
+
+        if (nextButton) {
+          console.log("➡️ Avanzando a la siguiente página...");
+          await nextButton.click();
+          pageNum++;
+          // Small wait to ensure UI reacts to click before next loop iteration's wait
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } else {
+          console.log("⏹️ No hay más páginas en esta región.");
+          hasNextPage = false;
+        }
+      }
       // if (filteredRows.length > 0) {
       //   console.log(
       //     `✨ ¡ÉXITO! Encontradas ${filteredRows.length} vacantes en ${region.text}`,

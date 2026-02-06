@@ -4,10 +4,12 @@ on:
   schedule:
     # 7:00 AM CR -> 13:00 UTC
     - cron: "0 13 * * *"
-    # 11:00 AM CR -> 17:00 UTC
-    - cron: "0 17 * * *"
+    # 1:00 PM CR -> 19:00 UTC
+    - cron: "0 19 * * *"
     # 3:30 PM CR -> 21:30 UTC
     - cron: "30 21 * * *"
+    # 6:00 PM CR -> 00:00 UTC
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 jobs:
@@ -50,10 +52,3 @@ jobs:
           OAUTH_REFRESH_TOKEN: ${{ secrets.OAUTH_REFRESH_TOKEN }}
           MAIL_DESTINATION: ${{ secrets.MAIL_DESTINATION }}
           KEYWORDS: ${{ secrets.KEYWORDS }}
-
-      - name: Subir resultados del Scraping
-        uses: actions/upload-artifact@v4
-        with:
-          name: resultados-mep-json
-          path: data/vacantes_mep.json
-          retention-days: 2 # El archivo estará disponible por 7 días

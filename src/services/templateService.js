@@ -19,6 +19,20 @@ class TemplateService {
 
     return m;
   }
+
+  /**
+   * Obtiene una lista única de todas las regiones definidas en los templates
+   * @returns {string[]}
+   */
+  getAllRegions() {
+    const allRegions = new Set();
+    Object.values(this.templates).forEach((tpl) => {
+      if (tpl.regions && Array.isArray(tpl.regions)) {
+        tpl.regions.forEach((reg) => allRegions.add(reg.toUpperCase()));
+      }
+    });
+    return Array.from(allRegions);
+  }
 }
 
 export default TemplateService;

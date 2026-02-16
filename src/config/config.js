@@ -13,18 +13,12 @@ const getEnv = (name, defaultValue = "") => process.env[name] || defaultValue;
 export const CONFIG = {
   scraper: {
     url: "https://apps.mep.go.cr/formulario",
-    keywords: getEnv("KEYWORDS")
-      ? getEnv("KEYWORDS")
-          .split(",")
-          .map((k) => k.trim().toUpperCase())
-      : [],
   },
   mail: {
     user: getEnv("MAIL_USERNAME"),
     clientId: getEnv("OAUTH_CLIENTID"),
     clientSecret: getEnv("OAUTH_CLIENT_SECRET"),
     refreshToken: getEnv("OAUTH_REFRESH_TOKEN"),
-    destination: getEnv("MAIL_DESTINATION"),
   },
   puppeteer: {
     headless: "new",

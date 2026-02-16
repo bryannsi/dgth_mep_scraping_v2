@@ -77,6 +77,28 @@ El proyecto utiliza una serie de scripts definidos en el `package.json` para fac
 - `data/`: Carpeta donde se almacenan los archivos JSON generados con las vacantes.
 - `build.js`: Script de configuración para el proceso de empaquetado con `esbuild`.
 
+## ⚙️ Configuración de Plantillas (`templates.json`)
+
+El archivo `src/config/templates.json` permite definir múltiples destinatarios y filtros personalizados. Cada objeto dentro del JSON representa una regla de envío.
+
+### Campos de cada plantilla:
+
+| Campo | Descripción |
+| :--- | :--- |
+| `subject` | El asunto del correo electrónico. |
+| `to` | Destinatario principal (email). |
+| `cc` | (Opcional) Destinatarios en copia. |
+| `html` | Contenido del correo en formato HTML. **Importante**: Debe incluir el marcador `{{TABLE}}`, el cual será reemplazado automáticamente por la tabla de vacantes filtradas. |
+| `keywords` | Array de palabras clave para buscar en el campo "Especialidad". El filtro ignora mayúsculas/minúsculas y acentos. |
+| `regions` | Array de regiones para filtrar (ej: "CARTAGO", "SAN JOSE"). Si se deja vacío, no filtrará por región. |
+
+### Cómo funciona el filtrado:
+1. El sistema extrae todas las vacantes del portal según las regiones de todas las plantillas, en caso de no haber ninguna región configurada, se extraen todas las vacantes.
+2. Para cada plantilla, busca vacantes que coincidan con **al menos una** keyword, en caso de no haber ninguna keyword configurada, se envían todas las vacantes.
+3. Si hay resultados, se genera la tabla y se envía el correo.
+
+---
+
 ## 🤝 Autor
 
 **Bryan Chavarría Hughes**

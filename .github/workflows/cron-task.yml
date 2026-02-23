@@ -2,8 +2,8 @@ name: MEP Scraping Cron Job
 
 on:
   schedule:
-    # 7:00 AM CR -> 13:00 UTC
-    - cron: "0 13 * * *"
+    # 7:35 AM CR -> 13:35 UTC
+    - cron: "35 13 * * *"
     # 1:00 PM CR -> 19:00 UTC
     - cron: "0 19 * * *"
     # 3:30 PM CR -> 21:30 UTC

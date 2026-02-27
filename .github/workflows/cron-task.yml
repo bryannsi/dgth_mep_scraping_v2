@@ -43,6 +43,11 @@ jobs:
       - name: Ejecutar Build (esbuild)
         run: pnpm run build
 
+      - name: Generar Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL_DIRECT: "postgresql://postgres:${{ secrets.DB_PASSWORD_ESCAPED }}@${{ secrets.DB_PROJECT_ID }}.supabase.co:${{ secrets.DB_PORT_DIRECT }}/postgres"
+
       - name: Ejecutar Scraping
         run: node build/index.js
 

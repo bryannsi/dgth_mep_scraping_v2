@@ -96,3 +96,23 @@ const normalizeValue = (str) => {
     .trim()
     .toUpperCase();
 };
+
+/**
+ * Helper para parsear fechas en formato DD/MM/YYYY (común en CR/MEP) o YYYY-MM-DD.
+ * Asegura el offset de Costa Rica (-06:00) para evitar desfases de día en entornos UTC.
+ * @param {string} dateStr - Fecha en texto.
+ * @returns {Date|null} - Objeto Date o null si es inválida.
+ */
+export function parseDate(dateStr) {
+  if (!dateStr) return null;
+  // Si está como DD/MM/YYYY
+  if (dateStr.includes("/")) {
+    const [day, month, year] = dateStr.split("/");
+    // Usamos el offset explícito de Costa Rica (-06:00) para evitar que
+    // al correr en GitHub Actions (UTC) se guarde como el día anterior.
+    return new Date(`${year}-${month}-${day}T00:00:00.000-06:00`);
+  }
+  // Fallback si es otro formato que JS entienda directamente
+  const date = new Date(dateStr);
+  return isNaN(date.getTime()) ? null : date;
+}

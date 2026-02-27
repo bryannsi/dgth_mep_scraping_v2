@@ -1,5 +1,6 @@
 import path from "path";
 import { scrapeVacantesMEP } from "./scrapers/scraper.js";
+import { DbService } from "./services/dbService.js";
 import { jsonExport } from "./services/exportService.js";
 import { NotificationService } from "./services/notificationService.js";
 import TemplateService from "./services/templateService.js";
@@ -24,18 +25,26 @@ async function main() {
     if (data && data.length > 0) {
       console.log(`📊 Se encontraron ${data.length} vacantes en total.`);
 
-      // 3. Guardar JSON
-      jsonExport(FILE_PATH, data);
+      // 2. Deduplicación en DB (PostgreSQL)
+      console.log("🔍 Verificando duplicados en la base de datos...");
+      const newData = await DbService.filterAndSaveNewVacancies(data);
 
-      // 4. Procesar Notificaciones (Filtrar, Generar HTML, Enviar Correos)
-      await notificationService.processNotifications(data, {
-        name: FILE_NAME,
-        path: FILE_PATH,
-      });
+      if (newData.length > 0) {
+        console.log(`✨ ${newData.length} nuevas vacantes detectadas.`);
+
+        // 3. Guardar JSON (Opcional, de respaldo)
+        jsonExport(FILE_PATH, data);
+
+        // 4. Procesar Notificaciones
+        await notificationService.processNotifications(newData, {
+          name: FILE_NAME,
+          path: FILE_PATH,
+        });
+      } else {
+        console.log("😴 No hay vacantes nuevas para notificar.");
+      }
     } else {
-      console.log(
-        "⚠️ No se encontraron vacantes que coincidan con los criterios.",
-      );
+      console.log("⚠️ No se encontraron vacantes en el scraping.");
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -43,8 +52,6 @@ async function main() {
   } catch (error) {
     console.error("❌ Error crítico en el flujo principal:");
     console.error(error.message);
-
-    // Salir con código de error para que GitHub Actions marque el Job como fallido
     process.exit(1);
   }
 }

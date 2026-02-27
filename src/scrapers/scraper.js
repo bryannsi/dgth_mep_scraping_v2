@@ -8,26 +8,30 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
 
   try {
     await page.goto(CONFIG.scraper.url, { waitUntil: "networkidle2" });
+    // Obtener TODAS las regiones del sitio
     await page.waitForSelector("select");
 
     const regions = await getRegions(page);
     const results = [];
     const seenIds = new Set();
 
-    // Filtrar regiones si se proporcionó una lista
+    // Asegurar un array válido (defensa contra null/undefined)
+    const regionsList = Array.isArray(allowedRegions) ? allowedRegions : [];
+
+    // Si hay filtros, se seleccionan regiones específicas; si no, se procesan TODAS las regiones del sitio
     const regionsToProcess =
-      allowedRegions.length > 0
+      regionsList.length > 0
         ? regions.filter((r) => {
             const normalizedText = r.text.toUpperCase();
-            return allowedRegions.some((allowed) =>
+            return regionsList.some((allowed) =>
               normalizedText.includes(allowed.toUpperCase()),
             );
           })
-        : regions;
+        : regions; // Fallback: todas las regionales encontradas en el selector del MEP
 
-    if (allowedRegions.length > 0) {
+    if (regionsList.length > 0) {
       console.log(
-        `🎯 Filtrando scraping para regiones: ${allowedRegions.join(", ")}`,
+        `🎯 Filtrando scraping para regiones: ${regionsList.join(", ")}`,
       );
       console.log(`✅ ${regionsToProcess.length} regiones coinciden.`);
     }

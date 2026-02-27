@@ -1,4 +1,5 @@
-import { loadEnvFile } from "node:process"; // Importamos la función nativa
+import templatesProd from "./templates.json" with { type: "json" };
+import templatesTest from "./templates_test.json" with { type: "json" };
 
 try {
   loadEnvFile();
@@ -16,6 +17,9 @@ const DB_PORT_POOLING = getEnv("DB_PORT_POOLING", "6543");
 const DB_PORT_DIRECT = getEnv("DB_PORT_DIRECT", "5432");
 
 export const CONFIG = {
+  templates:
+    getEnv("NODE_ENV") === "prod" ? templatesProd : templatesTest,
+  isProd: getEnv("NODE_ENV") === "prod",
   scraper: {
     url: "https://apps.mep.go.cr/formulario",
   },

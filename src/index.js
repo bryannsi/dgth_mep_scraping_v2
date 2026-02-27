@@ -1,4 +1,4 @@
-import path from "path";
+import { CONFIG } from "./config/config.js";
 import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 import { DbService } from "./services/dbService.js";
 import { jsonExport } from "./services/exportService.js";
@@ -14,8 +14,13 @@ async function main() {
   console.log("🚀 Iniciando MEP Scraping Service...");
   const startTime = Date.now();
 
-  // 1. Inicializar Servicios
-  const templateService = new TemplateService();
+  // 1. Selección de templates desde la configuración centralizada
+  const templateConfig = CONFIG.templates;
+
+  console.log(`🔧 Modo: ${CONFIG.isProd ? "PRODUCCIÓN" : "DESARROLLO"}`);
+
+  // 2. Inicializar Servicios con la configuración inyectada
+  const templateService = new TemplateService(templateConfig);
   const notificationService = new NotificationService(templateService);
 
   try {

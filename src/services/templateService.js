@@ -1,8 +1,8 @@
 import templates from "../config/templates.json" with { type: "json" };
 
 class TemplateService {
-  constructor() {
-    this.templates = templates;
+  constructor(customTemplates = null) {
+    this.templates = customTemplates || templates;
   }
   getMailTemplate(templateName, fileInfo, htmlContent) {
     const baseTemplate = this.templates[templateName];

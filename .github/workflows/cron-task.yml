@@ -2,12 +2,16 @@ name: MEP Scraping Cron Job
 
 on:
   schedule:
-    # 7:35 AM CR -> 13:35 UTC
-    - cron: "35 13 * * *"
-    # 8:05 AM - 5:35 PM CR -> 14:05 - 23:35 UTC
-    - cron: "5,35 14-23 * * *"
-    # 6:05 PM - 7:35 PM CR -> 00:05 - 01:35 UTC
-    - cron: "5,35 0-1 * * *"
+    # 7:42 AM CR -> 13:42 UTC
+    - cron: "42 13 * * *"
+    # 9:04 AM CR -> 15:04 UTC
+    - cron: "4 15 * * *"
+    # 12:03 PM CR -> 18:03 UTC
+    - cron: "3 18 * * *"
+    # 3:05 PM CR -> 21:05 UTC
+    - cron: "5 21 * * *"
+    # 5:12 PM CR -> 23:12 UTC
+    - cron: "12 23 * * *"
   workflow_dispatch:
 
 jobs:

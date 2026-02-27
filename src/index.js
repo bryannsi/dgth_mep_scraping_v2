@@ -1,3 +1,4 @@
+import path from "node:path";
 import { CONFIG } from "./config/config.js";
 import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 import { DbService } from "./services/dbService.js";

@@ -8,9 +8,9 @@ datasource db {
 
 model Vacancy {
   id               Int      @id @default(autoincrement())
-  mepId            String   @unique @map("mep_id") @db.VarChar(50)
+  mepId            String   @unique @map("mep_id") @db.Text
   vacante          String   @db.Text
-  regional         String   @db.VarChar(100)
+  regional         String   @db.Text
   clasePuesto      String   @map("clase_puesto") @db.Text
   especialidad     String   @db.Text
   institucion      String   @db.Text

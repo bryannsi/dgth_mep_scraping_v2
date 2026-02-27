@@ -1,8 +1,8 @@
-import templates from "../config/templates.json" with { type: "json" };
+import { CONFIG } from "../config/config.js";
 
-class TemplateService {
+export class TemplateService {
   constructor(customTemplates = null) {
-    this.templates = customTemplates || templates;
+    this.templates = customTemplates || CONFIG.templates;
   }
   getMailTemplate(templateName, fileInfo, htmlContent) {
     const baseTemplate = this.templates[templateName];
@@ -34,5 +34,3 @@ class TemplateService {
     return Array.from(allRegions);
   }
 }
-
-export default TemplateService;

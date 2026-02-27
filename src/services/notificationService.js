@@ -4,7 +4,7 @@ import { createHtmlTable } from "./renderService.js";
 
 export class NotificationService {
   /**
-   * @param {import("./templateService.js").default} templateService
+   * @param {import("./templateService.js").TemplateService} templateService
    */
   constructor(templateService) {
     this.templateService = templateService;

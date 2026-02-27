@@ -4,7 +4,7 @@ import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 import { DbService } from "./services/dbService.js";
 import { jsonExport } from "./services/exportService.js";
 import { NotificationService } from "./services/notificationService.js";
-import TemplateService from "./services/templateService.js";
+import { TemplateService } from "./services/templateService.js";
 
 const __dirname = import.meta.dirname;
 const OUTPUT_DIR = path.join(__dirname, "data");
@@ -15,13 +15,10 @@ async function main() {
   console.log("🚀 Iniciando MEP Scraping Service...");
   const startTime = Date.now();
 
-  // 1. Selección de templates desde la configuración centralizada
-  const templateConfig = CONFIG.templates;
-
   console.log(`🔧 Modo: ${CONFIG.isProd ? "PRODUCCIÓN" : "DESARROLLO"}`);
 
-  // 2. Inicializar Servicios con la configuración inyectada
-  const templateService = new TemplateService(templateConfig);
+  // 1. Inicializar Servicios
+  const templateService = new TemplateService();
   const notificationService = new NotificationService(templateService);
 
   try {

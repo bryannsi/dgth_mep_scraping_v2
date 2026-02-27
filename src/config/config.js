@@ -10,6 +10,11 @@ try {
 
 const getEnv = (name, defaultValue = "") => process.env[name] || defaultValue;
 
+const DB_PASSWORD = getEnv("DB_PASSWORD_ESCAPED");
+const DB_PROJECT = getEnv("DB_PROJECT_ID");
+const DB_PORT_POOLING = getEnv("DB_PORT_POOLING", "6543");
+const DB_PORT_DIRECT = getEnv("DB_PORT_DIRECT", "5432");
+
 export const CONFIG = {
   scraper: {
     url: "https://apps.mep.go.cr/formulario",
@@ -35,5 +40,20 @@ export const CONFIG = {
       "--no-first-run",
       "--no-zygote",
     ],
+  },
+};
+
+export const PRISMA_CONFIG = {
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
+  },
+  datasource: {
+    url:
+      getEnv("DATABASE_URL") ||
+      `postgresql://postgres.${DB_PROJECT}:${DB_PASSWORD}@aws-1-us-east-1.pooler.supabase.com:${DB_PORT_POOLING}/postgres?pgbouncer=true`,
+    directUrl:
+      getEnv("DIRECT_URL") ||
+      `postgresql://postgres:${DB_PASSWORD}@db.${DB_PROJECT}.supabase.co:${DB_PORT_DIRECT}/postgres`,
   },
 };

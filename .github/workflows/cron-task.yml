@@ -2,14 +2,12 @@ name: MEP Scraping Cron Job
 
 on:
   schedule:
-    # 7:00 AM CR -> 13:00 UTC
-    - cron: "0 13 * * *"
-    # 1:00 PM CR -> 19:00 UTC
-    - cron: "0 19 * * *"
-    # 3:30 PM CR -> 21:30 UTC
-    - cron: "30 21 * * *"
-    # 6:00 PM CR -> 00:00 UTC
-    - cron: "0 0 * * *"
+    # 7:35 AM CR -> 13:35 UTC
+    - cron: "35 13 * * *"
+    # 8:05 AM - 5:35 PM CR -> 14:05 - 23:35 UTC
+    - cron: "5,35 14-23 * * *"
+    # 6:05 PM - 7:35 PM CR -> 00:05 - 01:35 UTC
+    - cron: "5,35 0-1 * * *"
   workflow_dispatch:
 
 jobs:
@@ -50,3 +48,7 @@ jobs:
           OAUTH_CLIENTID: ${{ secrets.OAUTH_CLIENTID }}
           OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
           OAUTH_REFRESH_TOKEN: ${{ secrets.OAUTH_REFRESH_TOKEN }}
+          DB_PASSWORD_ESCAPED: ${{ secrets.DB_PASSWORD_ESCAPED }}
+          DB_PROJECT_ID: ${{ secrets.DB_PROJECT_ID }}
+          DB_PORT_POOLING: ${{ secrets.DB_PORT_POOLING }}
+          DB_PORT_DIRECT: ${{ secrets.DB_PORT_DIRECT }}

@@ -60,7 +60,7 @@ export function filterVacancies(rows, searchTerms, allowedRegions = []) {
 
   return rows.filter((row) => {
     // Accedemos a la llave estandarizada en la extracción
-    const originalValue = row.ESPECIALIDAD || "";
+    const originalValue = row.ESPECIALIDAD || row.especialidad || "";
     const cleanValue = normalizeValue(originalValue);
 
     // Compara el texto limpio de la web contra tus términos limpios

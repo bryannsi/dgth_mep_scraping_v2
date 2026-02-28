@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 model Vacancy {
@@ -19,5 +19,19 @@ model Vacancy {
   vence            DateTime? @db.Date
   bitacoraCreacion DateTime @default(now()) @map("bitacora_creacion") @db.Timestamptz
 
+  notificationLogs NotificationLog[]
+
   @@map("vacantes")
+}
+
+model NotificationLog {
+  id                Int      @id @default(autoincrement())
+  mepId             String   @map("mep_id") @db.Text
+  template          String   @db.Text
+  fechaNotificacion DateTime @default(now()) @map("fecha_notificacion") @db.Timestamptz
+
+  vacancy           Vacancy  @relation(fields: [mepId], references: [mepId], onDelete: Cascade)
+
+  @@unique([mepId, template])
+  @@map("log_notificaciones")
 }

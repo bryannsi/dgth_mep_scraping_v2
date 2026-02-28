@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "prestart": "pnpm run build",
     "start": "node ./build/index.js",
     "dev": "prisma generate && node --watch --watch-path=src ./src/index.js",
     "dev2": "node ./src/index.js",

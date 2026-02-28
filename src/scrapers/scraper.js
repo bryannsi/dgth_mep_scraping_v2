@@ -67,8 +67,22 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
           (row) => row.VACANTE && !seenIds.has(row.VACANTE),
         );
         newVacancies.forEach((row) => seenIds.add(row.VACANTE));
-        results.push(...newVacancies);
 
+        const mappedVacancies = newVacancies.map((row) => {
+          // Mapear los campos segun el html del sitio a scrapear
+          return {
+            vacante: row.VACANTE,
+            regional: row["DIRECCION REGIONAL"],
+            clasePuesto: row["CLASE DE PUESTO"],
+            especialidad: row.ESPECIALIDAD,
+            institucion: row.INSTITUCION,
+            lecciones: row.LECCIONES,
+            rige: row.RIGE,
+            vence: row.VENCE,
+          };
+        });
+
+        results.push(...mappedVacancies);
         console.log(
           `✨ Encontradas ${tableRows.length} vacantes en pág ${pageNum} (${newVacancies.length} nuevas)`,
         );
@@ -90,18 +104,6 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
           hasNextPage = false;
         }
       }
-      // if (filteredRows.length > 0) {
-      //   console.log(
-      //     `✨ ¡ÉXITO! Encontradas ${filteredRows.length} vacantes en ${region.text}`,
-      //   );
-      //   results.push(...filteredRows);
-
-      //   // --- LÓGICA DE SALIDA RÁPIDA ---
-      //   console.log("🛑 Deteniendo búsqueda para prueba rápida...");
-      //   break; // <--- Sale del bucle for ni bien encuentra algo
-      // } else {
-      //   console.log(`❌ Sin coincidencias en ${region.text}`);
-      // }
     }
 
     return results;

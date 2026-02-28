@@ -1,4 +1,4 @@
-import path from "node:path";
+﻿import path from "node:path";
 import { CONFIG } from "./config/config.js";
 import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 import { DbService } from "./services/dbService.js";
@@ -26,7 +26,7 @@ async function main() {
 
   try {
     // 2. Scraper: pedimos al crawler las vacantes configuradas por regiones,
-    //    las cuales se obtienen de todos los templates. Esto para no hacer scraping 
+    //    las cuales se obtienen de todos los templates. Esto para no hacer scraping
     //    de regiones que no nos interesan o no tenemos templates.
     //    Si no hay regiones configuradas, el scraper buscará en todas las regiones.
     const allowedRegions = templateService.getAllRegions();
@@ -46,24 +46,21 @@ async function main() {
 
         // 4. Guardar un respaldo en formato JSON con todas las vacantes extraídas
         jsonExport(FILE_PATH, data);
-
-        // 5. Notificaciones por correo: se trabaja únicamente con las
-        //    vacantes nuevas (newData) y se aplica el filtrado de keywords
-        //    dentro de NotificationService.
-        await notificationService.processNotifications(newData, {
-          name: FILE_NAME,
-          path: FILE_PATH,
-        });
-      } else {
-        // Si no hay vacantes nuevas, evitamos los pasos de export y mail.
-        console.log("😴 No hay vacantes nuevas para notificar.");
       }
+
+      // 5. Notificaciones por correo: se trabaja únicamente con las
+      //    vacantes nuevas (newData) y se aplica el filtrado de keywords
+      //    dentro de NotificationService.
+      await notificationService.processNotificationsFromDB({
+        name: FILE_NAME,
+        path: FILE_PATH,
+      });
     } else {
-      // Sin resultados del scraper, paramos el flujo.
+      // Si no hay vacantes nuevas, evitamos los pasos de export y mail.
+
       console.log("⚠️ No se encontraron vacantes en el scraping.");
     }
 
-    // Fin del proceso: duración y mensaje de éxito general.
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`✨ Proceso finalizado con éxito en ${duration}s`);
   } catch (error) {

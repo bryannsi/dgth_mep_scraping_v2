@@ -15,15 +15,18 @@ export class DbService {
    * @returns {Promise<Array>} - Lista de vacantes nuevas que no estaban en la BD.
    */
   static async filterAndSaveNewVacancies(vacancies) {
+    // Si no se pasó nada, no hacer nada.
     if (!vacancies?.length) return [];
 
     // 1. Extraer todos los IDs de las vacantes que queremos procesar (en una sola vuelta)
+    //    esto nos permite consultar en bloque a la base de datos y reducir llamadas.
     const mepIds = vacancies.flatMap((v) => {
       const id = v.VACANTE ? String(v.VACANTE) : null;
       return id && id !== "undefined" && id !== "null" ? [id] : [];
     });
 
-    // 2. Consultar en bloque cuáles de estos IDs ya existen en la DB
+    // 2. Consultar en bloque qué registros ya existen en la DB, usando el campo
+    //    `mepId` (mapa simple con select para no traer datos de más).
     const existingVacancies = await prisma.vacancy.findMany({
       where: { mepId: { in: mepIds } },
       select: { mepId: true },
@@ -31,7 +34,8 @@ export class DbService {
 
     const existingIds = new Set(existingVacancies.map((v) => v.mepId));
 
-    // 3. Filtrar solo las vacantes que NO están en la base de datos
+    // 3. Filtrar el conjunto original dejando únicamente las vacantes que NO
+    //    aparecen en la base de datos (nuevos candidatos a guardar).
     const newVacanciesToSave = vacancies.filter((v) => {
       const id = String(v.VACANTE);
       return id && id !== "undefined" && id !== "null" && !existingIds.has(id);
@@ -42,7 +46,8 @@ export class DbService {
       return [];
     }
 
-    // 4. Mapear datos al formato de Prisma
+    // 4. Mapear cada vacante al formato esperado por Prisma/BD. Aquí también
+    //    parseamos fechas y convertimos campos a strings para evitar nulls.
     const dataToInsert = newVacanciesToSave.map((vacancy) => ({
       mepId: String(vacancy.VACANTE),
       vacante: String(vacancy["VACANTE"] || vacancy.VACANTE || "N/A"),
@@ -58,7 +63,8 @@ export class DbService {
       vence: parseDate(vacancy.VENCE),
     }));
 
-    // 5. Inserción masiva (Bulk Insert)
+    // 5. Inserción masiva (Bulk Insert). Gracias a `skipDuplicates` podemos
+    //    ejecutar este paso sin riesgo aunque haya solapamientos en la data.
     const result = await prisma.vacancy.createMany({
       data: dataToInsert,
       skipDuplicates: true,

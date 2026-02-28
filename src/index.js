@@ -15,44 +15,59 @@ async function main() {
   console.log("🚀 Iniciando MEP Scraping Service...");
   const startTime = Date.now();
 
+  // Indicar si estamos corriendo en desarrollo o producción
   console.log(`🔧 Modo: ${CONFIG.isProd ? "PRODUCCIÓN" : "DESARROLLO"}`);
 
-  // 1. Inicializar Servicios
+  // 1. Inicializar los servicios que se usarán en todo el flujo. El
+  //    templateService decide qué configuración de plantillas usar según
+  //    NODE_ENV y es necesario para las notificaciones.
   const templateService = new TemplateService();
   const notificationService = new NotificationService(templateService);
 
   try {
+    // 2. Scraper: pedimos al crawler las vacantes configuradas por regiones,
+    //    las cuales se obtienen de todos los templates. Esto para no hacer scraping 
+    //    de regiones que no nos interesan o no tenemos templates.
+    //    Si no hay regiones configuradas, el scraper buscará en todas las regiones.
     const allowedRegions = templateService.getAllRegions();
     const data = await scrapeVacantesMEP(allowedRegions);
 
     if (data && data.length > 0) {
       console.log(`📊 Se encontraron ${data.length} vacantes en total.`);
 
-      // 2. Deduplicación en DB (PostgreSQL)
+      // 3. Filtrado/guardado en la base de datos. Este método guarda y retorna sólo
+      //    las vacantes nuevas que no existían antes (identificadas por el
+      //    campo VACANTE/mepId). Los duplicados se omiten aquí.
       console.log("🔍 Verificando duplicados en la base de datos...");
       const newData = await DbService.filterAndSaveNewVacancies(data);
 
       if (newData.length > 0) {
         console.log(`✨ ${newData.length} nuevas vacantes detectadas.`);
 
-        // 3. Guardar JSON (Opcional, de respaldo)
+        // 4. Guardar un respaldo en formato JSON con todas las vacantes extraídas
         jsonExport(FILE_PATH, data);
 
-        // 4. Procesar Notificaciones
+        // 5. Notificaciones por correo: se trabaja únicamente con las
+        //    vacantes nuevas (newData) y se aplica el filtrado de keywords
+        //    dentro de NotificationService.
         await notificationService.processNotifications(newData, {
           name: FILE_NAME,
           path: FILE_PATH,
         });
       } else {
+        // Si no hay vacantes nuevas, evitamos los pasos de export y mail.
         console.log("😴 No hay vacantes nuevas para notificar.");
       }
     } else {
+      // Sin resultados del scraper, paramos el flujo.
       console.log("⚠️ No se encontraron vacantes en el scraping.");
     }
 
+    // Fin del proceso: duración y mensaje de éxito general.
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`✨ Proceso finalizado con éxito en ${duration}s`);
   } catch (error) {
+    // Cualquier excepción no manejada provoca la salida con código 1.
     console.error("❌ Error crítico en el flujo principal:");
     console.error(error.message);
     process.exit(1);

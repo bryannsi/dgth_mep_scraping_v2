@@ -64,7 +64,7 @@ export class NotificationService {
           fileInfo,
           tablaHTML,
         );
-
+        //TODO; ESTO SE TIENE QUE MOVER AL dbService.
         // registrar notificaciones independientemente del envío
         const insertResult = await prisma.notificationLog.createMany({
           data: filteredData.map((v) => ({

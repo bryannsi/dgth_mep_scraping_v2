@@ -1,4 +1,5 @@
-﻿import path from "node:path";
+﻿import fs from "node:fs";
+import path from "node:path";
 import { CONFIG } from "./config/config.js";
 import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 import { DbService } from "./services/dbService.js";
@@ -6,8 +7,9 @@ import { jsonExport } from "./services/exportService.js";
 import { NotificationService } from "./services/notificationService.js";
 import { TemplateService } from "./services/templateService.js";
 
-const __dirname = import.meta.dirname;
-const OUTPUT_DIR = path.join(__dirname, "data");
+const OUTPUT_DIR = path.join(process.cwd(), "build", "data");
+fs.mkdirSync(OUTPUT_DIR, { recursive: true }); // crea build/data si no existe
+
 const FILE_NAME = "vacantes_mep.json";
 const FILE_PATH = path.join(OUTPUT_DIR, FILE_NAME);
 

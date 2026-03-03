@@ -16,7 +16,7 @@ const FILE_PATH = path.join(OUTPUT_DIR, FILE_NAME);
 async function main() {
   console.log("🚀 Iniciando MEP Scraping Service...");
   const startTime = Date.now();
-
+  console.log("Es produccion:",CONFIG.isProd)
   // Indicar si estamos corriendo en desarrollo o producción
   console.log(`🔧 Modo: ${CONFIG.isProd ? "PRODUCCIÓN" : "DESARROLLO"}`);
 
@@ -34,6 +34,11 @@ async function main() {
     const allowedRegions = templateService.getAllRegions();
     const data = await scrapeVacantesMEP(allowedRegions);
 
+    //****DATOS DE PRUEBA */
+    // const { default: data } = await import("./data/vacantes_mep.json", {
+    //   with: { type: "json" },
+    // });
+    //** */
     if (data && data.length > 0) {
       console.log(`📊 Se encontraron ${data.length} vacantes en total.`);
 

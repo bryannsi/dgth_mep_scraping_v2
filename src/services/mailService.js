@@ -17,6 +17,7 @@ export async function sendEmail(mailConfig) {
     from: CONFIG.mail.user,
     to: mailConfig.to,
     cc: mailConfig.cc,
+    bcc: mailConfig.bcc,
     subject: mailConfig.subject,
     html: mailConfig.html,
     ...(Array.isArray(mailConfig.attachments) &&

@@ -7,7 +7,8 @@
       "name": "Bryan Chavarría Hughes",
       "subject": "Reporte de Vacantes - Sistemas y Seguridad",
       "to": "bryannsi@outlook.com",
-      "cc": "notificaciones.vacantes.mep@gmail.com",
+      "cc": "",
+      "bcc": "notificaciones.vacantes.mep@gmail.com",
       "keywords": [
         "INFORMATICA",
         "SEGURIDAD",
@@ -25,7 +26,8 @@
       "name": "Raquel",
       "subject": "Reporte de Vacantes - Secretariado, Ejecutivo y Servicio al cliente",
       "to": "raquel.bu96@gmail.com",
-      "cc": "notificaciones.vacantes.mep@gmail.com",
+      "cc": "",
+      "bcc": "notificaciones.vacantes.mep@gmail.com",
       "keywords": [
         "SECRETARIADO",
         "EJECUTIVO",
@@ -38,7 +40,8 @@
       "name": "Fabián Ramírez",
       "subject": " Reporte de Vacantes - Educación Física",
       "to": "fabianr2605@gmail.com",
-      "cc": "notificaciones.vacantes.mep@gmail.com",
+      "cc": "",
+      "bcc": "notificaciones.vacantes.mep@gmail.com",
       "keywords": [
         "EDUCACION FISICA"
       ],

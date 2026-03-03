@@ -1,48 +1,22 @@
 {
-  "configs": {
-    "baseHtml": "<!doctype html><html lang=es><head><meta charset=UTF-8><meta name=viewport content='width=device-width,initial-scale=1'></head><body style='margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;color:#333'><table width=100% cellpadding=0 cellspacing=0 border=0;padding:20px><tr><td align=center><table width=100% cellpadding=0 cellspacing=0 border=0 style=max-width:600px;background-color:transparent><tr><td style='padding:10px 0 20px 0;text-align:left'><h2 style=margin:0;font-size:20px;color:#036>Oportunidades Disponibles</h2><p style='margin:5px 0 0 0;font-size:14px;color:#000'>Hola <strong>{{NAME}}</strong>, estas son las vacantes según tu perfil:</p></td></tr><tr><td>{{TABLE}}</td></tr><tr><td style='padding:20px 0;border-top:1px solid #e1e8ed'><p style=margin:0;font-size:11px;color:#000;line-height:1.6;text-align:justify><strong>Nota informativa:</strong> Este servicio de notificación es independiente y <strong>no tiene vínculo oficial con el Ministerio de Educación Pública (MEP)</strong>. Los datos mostrados son de carácter público y se entregan de forma automatizada a solicitud del usuario.</p></td></tr></table></td></tr></table></body></html>"
+  "template1": {
+    "subject": "🚀 Reporte de Vacantes - Sistemas y Seguridad",
+    "to": "bryannsi@outlook.com",
+    "html": "<h3>Vacantes de Sistemas y Seguridad:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>",
+    "keywords": ["INFORMATICA", "SEGURIDAD", "RED", "SOFTWARE", "DISPOSITIVO", "APLICACION", "SOPORTE", "COMUNICACION","SISTEMA"]
   },
-  "users": {
-    "template1": {
-      "name": "Bryan Chavarría Hughes",
-      "subject": "Reporte de Vacantes - Sistemas y Seguridad",
-      "to": "bryannsi@outlook.com",
-      "cc": "notificaciones.vacantes.mep@gmail.com",
-      "keywords": [
-        "INFORMATICA",
-        "SEGURIDAD",
-        "RED",
-        "SOFTWARE",
-        "DISPOSITIVO",
-        "APLICACION",
-        "SOPORTE",
-        "COMUNICACION",
-        "SISTEMA"
-      ],
-      "sendAttachment": false
-    },
-    "template2": {
-      "name": "Raquel",
-      "subject": "Reporte de Vacantes - Secretariado, Ejecutivo y Servicio al cliente",
-      "to": "raquel.bu96@gmail.com",
-      "cc": "notificaciones.vacantes.mep@gmail.com",
-      "keywords": [
-        "SECRETARIADO",
-        "EJECUTIVO",
-        "COMERCIAL",
-        "CLIENTE"
-      ],
-      "sendAttachment": false
-    },
-    "template3": {
-      "name": "Fabián Ramírez",
-      "subject": " Reporte de Vacantes - Educación Física",
-      "to": "fabianr2605@gmail.com",
-      "cc": "notificaciones.vacantes.mep@gmail.com",
-      "keywords": [
-        "EDUCACION FISICA"
-      ],
-      "sendAttachment": false
-    }
+  "template2": {
+    "subject": "🚀 Reporte de Vacantes - Secretariado, Ejecutivo y Servicio al cliente",
+    "to": "raquel.bu96@gmail.com",
+    "cc": "",
+    "html": "<h3>Vacantes de Secretariado, Ejecutivo y Servicio al cliente:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>",
+    "keywords": ["SECRETARIADO", "EJECUTIVO", "COMERCIAL","CLIENTE"]
+  },
+   "template3": {
+    "subject": "🚀 Reporte de Vacantes - Educación Física",
+    "to": "fabianr2605@gmail.com",
+    "cc": "",
+    "html": "<h3>Vacantes de Educación Física:</h3><div style='margin-top: 20px;'>{{TABLE}}</div><p>Se adjunta el archivo completo en formato JSON.</p>",
+    "keywords": ["EDUCACION FISICA"]
   }
 }

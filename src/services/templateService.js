@@ -1,72 +1,28 @@
 import { CONFIG } from "../config/config.js";
 
-/**
- * Servicio encargado de gestionar y construir plantillas de correo
- * basadas en la configuración definida en el sistema.
- */
 export class TemplateService {
-  /**
-   * Crea una nueva instancia de TemplateService.
-   *
-   * @param {Object<string, Object>|null} [customTemplates=null] -
-   * Objeto opcional de templates personalizados.
-   * Si no se proporciona, se utilizan los templates definidos en CONFIG.templates.
-   */
   constructor(customTemplates = null) {
     this.templates = customTemplates || CONFIG.templates;
   }
-  /**
-   * Construye un objeto de correo basado en un template específico.
-   *
-   * @param {string} templateName - Nombre del template a utilizar.
-   * @param {{ name: string, path: string }} fileInfo -
-   * Información del archivo adjunto (nombre y ruta).
-   * @param {string} htmlContent -
-   * Contenido HTML que reemplazará el marcador {{TABLE}} dentro del template.
-   *
-   * @returns {Object} Objeto de configuración listo para enviarse por correo.
-   *
-   * @throws {Error} Si el template solicitado no existe en la configuración.
-   */
   getMailTemplate(templateName, fileInfo, htmlContent) {
-    // 1. Acceder a la sección de usuarios y al HTML base
-    const templateData = this.templates.users[templateName];
-    const baseHtml = this.templates.configs.baseHtml;
-    if (!templateData) {
-      throw new Error(`El template "${templateName}" no existe.`);
-    }
+    const baseTemplate = this.templates[templateName];
 
-    // 2. Clonar los datos del usuario para el objeto de envío
-    let templateDataCopy = JSON.parse(JSON.stringify(templateData));
+    if (!baseTemplate)
+      throw new Error(
+        `El template "${templateName}" no existe en el archivo de configuración.`,
+      );
 
-    // 3. Gestionar adjuntos
-    if (templateDataCopy.sendAttachment && fileInfo?.name && fileInfo?.path) {
-      templateDataCopy.attachments = [
-        { filename: fileInfo.name, path: fileInfo.path },
-      ];
-    }
+    // Clonamos para evitar modificar el original
+    let m = { ...baseTemplate };
+    m.attachments = [{ filename: fileInfo.name, path: fileInfo.path }];
+    m.html = m.html.replace("{{TABLE}}", htmlContent);
 
-    // 4. Inyectar el HTML base y procesar los tokens (NAME y TABLE)
-    const replaceableTokens = {
-      NAME: templateDataCopy.name || "",
-      TABLE: htmlContent || "",
-    };
-
-    // Reemplazamos los tokens en el commonHtml y lo asignamos al template de salida
-    templateDataCopy.html = baseHtml.replace(
-      /{{(\w+)}}/g,
-      (match, key) => replaceableTokens[key] ?? "",
-    );
-
-    return templateDataCopy;
+    return m;
   }
+
   /**
-   * Obtiene una lista única de todas las regiones definidas
-   * dentro de los templates configurados.
-   *
-   * Las regiones se devuelven en mayúsculas.
-   *
-   * @returns {string[]} Arreglo de regiones únicas.
+   * Obtiene una lista única de todas las regiones definidas en los templates
+   * @returns {string[]}
    */
   getAllRegions() {
     const allRegions = new Set();

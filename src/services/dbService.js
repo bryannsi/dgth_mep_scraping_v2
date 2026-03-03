@@ -35,7 +35,7 @@ export class DbService {
     });
 
     const existingIds = new Set(existingVacancies.map((v) => v.mepId));
-
+    console.dir({ totalVacancies: vacancies.length, uniqueMepIds: mepIds.length, existingInDB: existingIds.size });
     // 3. Filtrar el conjunto original dejando únicamente las vacantes que NO
     //    aparecen en la base de datos (nuevos candidatos a guardar).
     const newVacanciesToSave = vacancies.filter((v) => {

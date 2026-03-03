@@ -12,7 +12,7 @@ async function buildProject() {
       platform: "node",
       format: "esm",
       target: ["node23"],
-      drop: ["console", "debugger"],
+      // drop: ["console", "debugger"],
       legalComments: "none",
       outfile: "build/index.js",
       plugins: [

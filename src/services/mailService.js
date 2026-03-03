@@ -19,7 +19,10 @@ export async function sendEmail(mailConfig) {
     cc: mailConfig.cc,
     subject: mailConfig.subject,
     html: mailConfig.html,
-    attachments: mailConfig.attachments,
+    ...(Array.isArray(mailConfig.attachments) &&
+      mailConfig.attachments.length > 0 && {
+        attachments: mailConfig.attachments,
+      }),
   };
 
   return await transporter.sendMail(options);

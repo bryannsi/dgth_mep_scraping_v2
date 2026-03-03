@@ -7,14 +7,14 @@ export class NotificationService {
   constructor(templateService) {
     this.templateService = templateService;
   }
-
+  //TODO: este metodo processNotificationsFromDB debe estar en la capa DB
   /**
    * Procesa notificaciones basadas en el estado actual de la BD,
    * notificando solo vacantes que no hayan sido notificadas aún para cada template.
    * @param {Object} fileInfo - Información del archivo adjunto { name, path }
    */
   async processNotificationsFromDB(fileInfo) {
-    const templates = this.templateService.templates;
+    const templates = this.templateService.templates.users;
 
     console.log("📂 Obteniendo vacantes de la base de datos...");
     const allVacancies = await prisma.vacancy.findMany();

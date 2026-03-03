@@ -61,3 +61,4 @@ jobs:
           DB_PROJECT_ID: ${{ secrets.DB_PROJECT_ID }}
           DB_PORT_POOLING: ${{ secrets.DB_PORT_POOLING }}
           DB_PORT_DIRECT: ${{ secrets.DB_PORT_DIRECT }}
+          MODE_ENV: ${{ secrets.MODE_ENV }}

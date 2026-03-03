@@ -16,7 +16,6 @@ const FILE_PATH = path.join(OUTPUT_DIR, FILE_NAME);
 async function main() {
   console.log("🚀 Iniciando MEP Scraping Service...");
   const startTime = Date.now();
-  console.log("Es produccion:",CONFIG.isProd)
   // Indicar si estamos corriendo en desarrollo o producción
   console.log(`🔧 Modo: ${CONFIG.isProd ? "PRODUCCIÓN" : "DESARROLLO"}`);
 

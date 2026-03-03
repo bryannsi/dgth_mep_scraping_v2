@@ -20,7 +20,6 @@ const DB_PROJECT = getEnv("DB_PROJECT_ID");
 const DB_PORT_POOLING = getEnv("DB_PORT_POOLING", "6543");
 const DB_PORT_DIRECT = getEnv("DB_PORT_DIRECT", "5432");
 const isProd = getEnv("MODE_ENV") === "prod";
-console.log("Modo de ejecución desde config:", isProd ? "PRODUCCIÓN" : "DESARROLLO");
 export const CONFIG = {
   templates: isProd ? templatesProd : templatesTest,
   isProd: isProd,

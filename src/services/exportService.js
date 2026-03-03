@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 /**
  * Exporta un conjunto de datos a un archivo en formato JSON.
@@ -18,9 +18,7 @@ export const jsonExport = (filePath, data) => {
   try {
     // 1. Asegurar que la carpeta existe para evitar errores de 'no such file or directory'
     const dir = path.dirname(filePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+    fs.mkdirSync(dir, { recursive: true });
 
     // 2. Aplanar los datos si vienen de múltiples regiones (Array de Arrays -> Array simple)
     // El método .flat() une los sub-arreglos en una sola lista plana.

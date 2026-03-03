@@ -21,8 +21,8 @@ const DB_PORT_POOLING = getEnv("DB_PORT_POOLING", "6543");
 const DB_PORT_DIRECT = getEnv("DB_PORT_DIRECT", "5432");
 
 export const CONFIG = {
-  templates: getEnv("NODE_ENV") === "prod" ? templatesProd : templatesTest,
-  isProd: getEnv("NODE_ENV") === "prod",
+  templates: getEnv("MODE_ENV") === "prod" ? templatesProd : templatesTest,
+  isProd: getEnv("MODE_ENV") === "prod",
   scraper: {
     url: "https://apps.mep.go.cr/formulario",
   },

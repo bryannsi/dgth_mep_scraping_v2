@@ -4,7 +4,7 @@ on:
   schedule:
     # 7:42 AM CR -> 13:42 UTC
     - cron: "42 13 * * *"
-    # 9:04 AM CR -> 15:04 UTT
+    # 9:04 AM CR -> 15:04 UTC
     - cron: "4 15 * * *"
     # 12:03 PM CR -> 18:03 UTC
     - cron: "3 18 * * *"
@@ -43,6 +43,11 @@ jobs:
       - name: Ejecutar Build (esbuild)
         run: pnpm run build
 
+      - name: Generar Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL_DIRECT: "postgresql://postgres:${{ secrets.DB_PASSWORD_ESCAPED }}@${{ secrets.DB_PROJECT_ID }}.supabase.co:${{ secrets.DB_PORT_DIRECT }}/postgres"
+
       - name: Ejecutar Scraping
         run: node build/index.js
 
@@ -52,3 +57,7 @@ jobs:
           OAUTH_CLIENTID: ${{ secrets.OAUTH_CLIENTID }}
           OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
           OAUTH_REFRESH_TOKEN: ${{ secrets.OAUTH_REFRESH_TOKEN }}
+          DB_PASSWORD_ESCAPED: ${{ secrets.DB_PASSWORD_ESCAPED }}
+          DB_PROJECT_ID: ${{ secrets.DB_PROJECT_ID }}
+          DB_PORT_POOLING: ${{ secrets.DB_PORT_POOLING }}
+          DB_PORT_DIRECT: ${{ secrets.DB_PORT_DIRECT }}

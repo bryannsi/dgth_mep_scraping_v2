@@ -5,18 +5,25 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "prestart": "pnpm run build",
     "start": "node ./build/index.js",
-    "dev": "node --watch --watch-path=src ./src/index.js",
+    "dev": "prisma generate && node --watch --watch-path=src ./src/index.js",
     "dev2": "node ./src/index.js",
-    "build": "node -e \"import('fs').then(fs => fs.rmSync('build', { recursive: true, force: true }))\" && node build.js"
+    "generate": "prisma generate",
+    "build": "prisma generate && node -e \"import('fs').then(fs => fs.rmSync('build', { recursive: true, force: true }))\" && node build.js",
+    "test": "node --test tests/dateParsing.test.js"
   },
   "keywords": [],
   "author": "Bryan Chavarría Hughes",
   "license": "ISC",
   "packageManager": "pnpm@10.9.0",
   "dependencies": {
+    "@prisma/adapter-pg": "^7.4.1",
+    "@prisma/client": "^7.4.1",
     "googleapis": "^171.0.0",
     "nodemailer": "^7.0.13",
+    "pg": "^8.19.0",
+    "prisma": "^7.4.1",
     "puppeteer": "^24.35.0"
   },
   "devDependencies": {

@@ -145,4 +145,7 @@ dist
 
 #build code
 /build
-src/data/vacantes_mep.json
+src/data/
+/src/generated/prisma
+data/vacantes_mep.json
+nuevo .env

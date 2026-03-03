@@ -1,3 +1,20 @@
+// @ts-check
+
+/**
+ * @typedef {Object} Vacante
+ * @property {string} mepId
+ * @property {string} regional
+ * @property {string} especialidad
+ * @property {string} institucion
+ * @property {number} lecciones
+ * @property {string|null} rige
+ * @property {string|null} vence
+ */
+
+/**
+ * @param {Vacante[]} vacantes
+ * @returns {string}
+ */
 export function createHtmlTable(vacantes) {
   const tableStyle =
     "width: 100%; border-collapse: collapse; font-family: sans-serif;";
@@ -6,17 +23,22 @@ export function createHtmlTable(vacantes) {
   const tdStyle = "padding: 8px; border: 1px solid #ddd; text-align: left;";
 
   const rows = vacantes
-    .map(
-      (v, i) => `
-        <tr style="background-color: ${i % 2 === 0 ? "#ffffff" : "#f2f2f2"};">
-            <td style="${tdStyle}">${v["VACANTE"] || "N/A"}</td>
-            <td style="${tdStyle}">${v["DIRECCION REGIONAL"] || "N/A"}</td>
-            <td style="${tdStyle}">${v["ESPECIALIDAD"] || "N/A"}</td>
-            <td style="${tdStyle}">${v["INSTITUCION"] || v["CENTRO EDUCATIVO"] || "N/A"}</td>
-            <td style="${tdStyle}">${v["LECCIONES"] || "0"}</td>
-            <td style="${tdStyle} white-space: nowrap;">${v["RIGE"] || "N/A"}&nbsp;al&nbsp;${v["VENCE"] || "N/A"}</td>
-        </tr>`,
-    )
+    .map((v, i) => {
+      const rige = v.rige ? new Date(v.rige).toLocaleDateString("es-CR") : "N/A";
+      const vence = v.vence ? new Date(v.vence).toLocaleDateString("es-CR") : "N/A";
+
+      return `
+      <tr style="background-color: ${i % 2 === 0 ? "#ffffff" : "#f2f2f2"};">
+          <td style="${tdStyle}">${v.mepId || "N/A"}</td>
+          <td style="${tdStyle}">${v.regional || "N/A"}</td>
+          <td style="${tdStyle}">${v.especialidad || "N/A"}</td>
+          <td style="${tdStyle}">${v.institucion || "N/A"}</td>
+          <td style="${tdStyle}">${v.lecciones ?? "0"}</td>
+          <td style="${tdStyle} white-space: nowrap;">
+            ${rige}&nbsp;al&nbsp;${vence}
+          </td>
+      </tr>`;
+    })
     .join("");
 
   return `

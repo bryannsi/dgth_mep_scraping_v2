@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Vacancy {
+  id               Int      @id @default(autoincrement())
+  mepId            String   @unique @map("mep_id") @db.Text
+  vacante          String   @db.Text
+  regional         String   @db.Text
+  clasePuesto      String   @map("clase_puesto") @db.Text
+  especialidad     String   @db.Text
+  institucion      String   @db.Text
+  lecciones        Int      @db.SmallInt
+  rige             DateTime @db.Date
+  vence            DateTime? @db.Date
+  bitacoraCreacion DateTime @default(now()) @map("bitacora_creacion") @db.Timestamptz
+
+  notificationLogs NotificationLog[]
+
+  @@map("vacantes")
+}
+
+model NotificationLog {
+  id                Int      @id @default(autoincrement())
+  mepId             String   @map("mep_id") @db.Text
+  template          String   @db.Text
+  fechaNotificacion DateTime @default(now()) @map("fecha_notificacion") @db.Timestamptz
+
+  vacancy           Vacancy  @relation(fields: [mepId], references: [mepId], onDelete: Cascade)
+
+  @@unique([mepId, template])
+  @@map("log_notificaciones")
+}

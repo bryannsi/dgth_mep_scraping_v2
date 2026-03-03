@@ -8,26 +8,30 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
 
   try {
     await page.goto(CONFIG.scraper.url, { waitUntil: "networkidle2" });
+    // Obtener TODAS las regiones del sitio
     await page.waitForSelector("select");
 
     const regions = await getRegions(page);
     const results = [];
     const seenIds = new Set();
 
-    // Filtrar regiones si se proporcionó una lista
+    // Asegurar un array válido (defensa contra null/undefined)
+    const regionsList = Array.isArray(allowedRegions) ? allowedRegions : [];
+
+    // Si hay filtros, se seleccionan regiones específicas; si no, se procesan TODAS las regiones del sitio
     const regionsToProcess =
-      allowedRegions.length > 0
+      regionsList.length > 0
         ? regions.filter((r) => {
             const normalizedText = r.text.toUpperCase();
-            return allowedRegions.some((allowed) =>
+            return regionsList.some((allowed) =>
               normalizedText.includes(allowed.toUpperCase()),
             );
           })
-        : regions;
+        : regions; // Fallback: todas las regionales encontradas en el selector del MEP
 
-    if (allowedRegions.length > 0) {
+    if (regionsList.length > 0) {
       console.log(
-        `🎯 Filtrando scraping para regiones: ${allowedRegions.join(", ")}`,
+        `🎯 Filtrando scraping para regiones: ${regionsList.join(", ")}`,
       );
       console.log(`✅ ${regionsToProcess.length} regiones coinciden.`);
     }
@@ -63,8 +67,22 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
           (row) => row.VACANTE && !seenIds.has(row.VACANTE),
         );
         newVacancies.forEach((row) => seenIds.add(row.VACANTE));
-        results.push(...newVacancies);
 
+        const mappedVacancies = newVacancies.map((row) => {
+          // Mapear los campos segun el html del sitio a scrapear
+          return {
+            vacante: row.VACANTE,
+            regional: row["DIRECCION REGIONAL"],
+            clasePuesto: row["CLASE DE PUESTO"],
+            especialidad: row.ESPECIALIDAD,
+            institucion: row.INSTITUCION,
+            lecciones: row.LECCIONES,
+            rige: row.RIGE,
+            vence: row.VENCE,
+          };
+        });
+
+        results.push(...mappedVacancies);
         console.log(
           `✨ Encontradas ${tableRows.length} vacantes en pág ${pageNum} (${newVacancies.length} nuevas)`,
         );
@@ -86,18 +104,6 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
           hasNextPage = false;
         }
       }
-      // if (filteredRows.length > 0) {
-      //   console.log(
-      //     `✨ ¡ÉXITO! Encontradas ${filteredRows.length} vacantes en ${region.text}`,
-      //   );
-      //   results.push(...filteredRows);
-
-      //   // --- LÓGICA DE SALIDA RÁPIDA ---
-      //   console.log("🛑 Deteniendo búsqueda para prueba rápida...");
-      //   break; // <--- Sale del bucle for ni bien encuentra algo
-      // } else {
-      //   console.log(`❌ Sin coincidencias en ${region.text}`);
-      // }
     }
 
     return results;

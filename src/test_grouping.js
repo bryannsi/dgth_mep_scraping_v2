@@ -1,5 +1,5 @@
 import { filterVacancies } from "./helpers/helpers.js";
-import TemplateService from "./services/templateService.js";
+import { TemplateService } from "./services/templateService.js";
 
 // MOCK DATA
 const mockData = [

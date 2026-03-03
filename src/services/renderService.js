@@ -4,6 +4,7 @@
  * @typedef {Object} Vacante
  * @property {string} mepId
  * @property {string} regional
+ * @property {string} clasePuesto
  * @property {string} especialidad
  * @property {string} institucion
  * @property {number} lecciones
@@ -16,45 +17,83 @@
  * @returns {string}
  */
 export function createHtmlTable(vacantes) {
-  const tableStyle =
-    "width: 100%; border-collapse: collapse; font-family: sans-serif;";
-  const thStyle =
-    "background-color: #003366; color: white; padding: 10px; border: 1px solid #ddd;";
-  const tdStyle = "padding: 8px; border: 1px solid #ddd; text-align: left;";
+  // Contenedor principal
+  const containerStyle =
+    "padding: 10px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;";
 
-  const rows = vacantes
-    .map((v, i) => {
-      const rige = v.rige ? new Date(v.rige).toLocaleDateString("es-CR") : "N/A";
-      const vence = v.vence ? new Date(v.vence).toLocaleDateString("es-CR") : "N/A";
+  // Estilo de la tarjeta
+  const cardStyle = `
+    background-color: #ffffff; 
+    border: 1px solid #e1e8ed; 
+    border-radius: 8px; 
+    margin-bottom: 15px; 
+    padding: 15px; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  `;
+
+  // Estilo de etiquetas (Labels)
+  const labelStyle =
+    "color: #000000; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; display: block;";
+
+  // Estilo de contenido
+  const valueStyle =
+    "color: #333333; font-size: 14px; margin-bottom: 10px; display: block;";
+
+  // Generamos las tarjetas
+  const cards = vacantes
+    .map((v) => {
+      // Lógica de fechas
+      const rige = v.rige
+        ? new Date(v.rige).toLocaleDateString("es-CR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            timeZone: "UTC", // <--- "Candado" de seguridad
+          })
+        : "N/A";
+      const vence = v.vence
+        ? new Date(v.vence).toLocaleDateString("es-CR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            timeZone: "UTC", // <--- "Candado" de seguridad
+          })
+        : "N/A";
 
       return `
-      <tr style="background-color: ${i % 2 === 0 ? "#ffffff" : "#f2f2f2"};">
-          <td style="${tdStyle}">${v.mepId || "N/A"}</td>
-          <td style="${tdStyle}">${v.regional || "N/A"}</td>
-          <td style="${tdStyle}">${v.especialidad || "N/A"}</td>
-          <td style="${tdStyle}">${v.institucion || "N/A"}</td>
-          <td style="${tdStyle}">${v.lecciones ?? "0"}</td>
-          <td style="${tdStyle} white-space: nowrap;">
-            ${rige}&nbsp;al&nbsp;${vence}
-          </td>
-      </tr>`;
+      <div style="${cardStyle}">
+        <div style="border-bottom: 2px solid #003366; margin-bottom: 12px; padding-bottom: 5px;">
+            <span style="color: #003366; font-size: 16px; font-weight: bold;">${v.especialidad || "Especialidad no definida"}</span>
+            <div style="font-size: 14px; color: #000000; margin-top: 2px; font-weight: 500;">${v.clasePuesto || "Clase de puesto no definida"}</div>
+            <div style="font-size: 12px; color: #000000;">Número de Vacante: ${v.mepId || "N/A"}</div>
+        </div>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td width="50%" style="vertical-align: top; padding-right: 10px;">
+              <span style="${labelStyle}">Institución</span>
+              <span style="${valueStyle}">${v.institucion || "N/A"}</span>
+            </td>
+            <td width="50%" style="vertical-align: top;">
+              <span style="${labelStyle}">Región</span>
+              <span style="${valueStyle}">${v.regional || "N/A"}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">
+              <span style="${labelStyle}">Lecciones</span>
+              <span style="${valueStyle}"><strong>${v.lecciones || "0"}</strong></span>
+            </td>
+            <td style="vertical-align: top;">
+              <span style="${labelStyle}">Vigencia</span>
+              <span style="${valueStyle}">${rige} al ${vence}</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    `;
     })
     .join("");
 
-  return `
-        <div style="width: 100%; overflow-x: auto; margin: 20px 0;">
-            <table style="${tableStyle}">
-                <thead>
-                    <tr>
-                        <th style="${thStyle} white-space: nowrap;">VACANTE</th>
-                        <th style="${thStyle}">DIRECCIÓN REGIONAL</th>
-                        <th style="${thStyle}">ESPECIALIDAD</th>
-                        <th style="${thStyle}">INSTITUCIÓN</th>
-                        <th style="${thStyle}">LECCIONES</th>
-                        <th style="${thStyle} white-space: nowrap;">VIGENCIA</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>`;
+  return `<div style="${containerStyle}">${cards}</div>`;
 }

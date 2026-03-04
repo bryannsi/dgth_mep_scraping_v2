@@ -1,17 +1,16 @@
 name: MEP Scraping Cron Job
-
 on:
   schedule:
-    # 7:42 AM CR -> 13:42 UTC
-    - cron: "42 13 * * *"
-    # 9:04 AM CR -> 15:04 UTC
-    - cron: "4 15 * * *"
-    # 12:03 PM CR -> 18:03 UTC
-    - cron: "3 18 * * *"
-    # 3:05 PM CR -> 21:05 UTC
-    - cron: "5 21 * * *"
-    # 5:12 PM CR -> 23:12 UTC
-    - cron: "12 23 * * *"
+    # Ejecuta cada 30 minutos desde las 7:00 a.m. hasta las 5:30 p.m.
+    # Hora configurada en UTC.
+    # 13:00–23:30 UTC equivale a 7:00 a.m.hasta las 5:30 p.m. en Costa Rica (UTC-6)
+    - cron: "0,30 13-23 * * *"
+
+    # Ejecuta únicamente a las 00:00 UTC
+    # 00:00 UTC equivale a las 6:00 p.m. hora Costa Rica
+    # Se agrega aparte porque 18:00 CR corresponde a la hora 0 en UTC (día siguiente)
+    - cron: "0 0 * * *"
+
   workflow_dispatch:
 
 jobs:

@@ -1,12 +1,18 @@
 import fs from "node:fs";
 import pino from "pino";
+import { CONFIG } from "../config/config.js";
 import { prisma } from "./dbService.js";
 
-const isProduction = false;
 const baseLogger = pino({
-  level: isProduction ? "info" : "debug",
-  // SOLO usamos transport si NO estamos en producción
-  transport: !isProduction
+  /*
+   * NIVELES DE LOG DISPONIBLES (de menor a mayor gravedad):
+   * 'debug' -> TODO (ideal para desarrollo)
+   * 'info'  -> Detalle de logs
+   * 'warn'  -> Avisos que no rompen el flujo
+   * 'error' -> Fallos críticos (mínima verbosidad)
+   */
+  level: CONFIG.isProd ? "info" : "debug",
+  transport: !CONFIG.isProd
     ? {
         target: "pino-pretty",
         options: {

@@ -11,7 +11,7 @@ const baseLogger = pino({
    * 'warn'  -> Avisos que no rompen el flujo
    * 'error' -> Fallos críticos (mínima verbosidad)
    */
-  level: CONFIG.isProd ? "info" : "debug",
+  level: CONFIG.isProd ? "error" : "debug",
   transport: !CONFIG.isProd
     ? {
         target: "pino-pretty",

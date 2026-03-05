@@ -2,7 +2,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { loadEnvFile } from "node:process";
 import pg from "pg";
-import { PRISMA_CONFIG } from "./src/config/config.js";
+import { PRISMA_CONFIG } from "../src/config/config.js";
 
 // 1. Cargar .env
 try {

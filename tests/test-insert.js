@@ -4,8 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { loadEnvFile } from "node:process";
 import pg from "pg";
-import { PRISMA_CONFIG } from "./src/config/config.js";
-import { parseDate } from "./src/helpers/helpers.js";
+import { PRISMA_CONFIG } from "../src/config/config.js";
+import { parseDate } from "../src/helpers/helpers.js";
 
 // 1. Cargar .env
 try {

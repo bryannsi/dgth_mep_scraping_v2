@@ -116,3 +116,25 @@ export function parseDate(dateStr) {
   const date = new Date(dateStr);
   return isNaN(date.getTime()) ? null : date;
 }
+
+/**
+ * Convierte milisegundos a una cadena legible usando la API nativa Intl. DurationFormat
+ * @param {number} ms - Milisegundos a formatear
+ * @returns {string} - Tiempo formateado (ej: "2 min 15 s")
+ */
+export function formatDuration(ms) {
+  const secondsTotal = Math.floor(ms / 1000);
+  const minutes = Math.floor(secondsTotal / 60);
+  const seconds = secondsTotal % 60;
+
+  try {
+    // Nota: Intl.DurationFormat requiere Node.js 22.0.0+
+    return new Intl.DurationFormat("es", {
+      style: "short",
+      values: "numeric", // Evita mostrar 0 min si no hay minutos
+    }).format({ minutes, seconds });
+  } catch (e) {
+    // Fallback simple por si el entorno no soporta la API todavía
+    return minutes > 0 ? `${minutes}min ${seconds}s` : `${seconds}s`;
+  }
+}

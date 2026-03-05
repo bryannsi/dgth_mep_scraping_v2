@@ -1,5 +1,6 @@
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
+import { logger } from "./loggerService.js";
 
 /**
  * Exporta un conjunto de datos a un archivo en formato JSON.
@@ -14,11 +15,11 @@ import path from "node:path";
  * @returns {void} No devuelve ningún valor.
  * @throws {Error} Lanza una excepción si hay problemas de permisos o errores en el sistema de archivos.
  */
-export const jsonExport = (filePath, data) => {
+export const jsonExport = async (filePath, data) => {
   try {
     // 1. Asegurar que la carpeta existe para evitar errores de 'no such file or directory'
     const dir = path.dirname(filePath);
-    fs.mkdirSync(dir, { recursive: true });
+    await fs.mkdir(dir, { recursive: true });
 
     // 2. Aplanar los datos si vienen de múltiples regiones (Array de Arrays -> Array simple)
     // El método .flat() une los sub-arreglos en una sola lista plana.
@@ -28,13 +29,13 @@ export const jsonExport = (filePath, data) => {
     const jsonString = JSON.stringify(flatData, null, 2);
 
     // 4. Guardar archivo (sobrescribe contenido previo por defecto)
-    fs.writeFileSync(filePath, jsonString, "utf8");
+    await fs.writeFile(filePath, jsonString, "utf8");
 
-    console.log(
+    logger.info(
       `✅ Exportación exitosa: ${flatData.length} registros en ${filePath}`,
     );
   } catch (error) {
-    console.error("❌ Error en exportService.jsonExport:", error);
+    await logger.error("❌ Error en exportService.jsonExport:", error);
     throw error;
   }
 };

@@ -1,9 +1,11 @@
 ﻿import fs from "node:fs";
 import path from "node:path";
 import { CONFIG } from "./config/config.js";
+import { formatDuration } from "./helpers/helpers.js";
 import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 import { DbService } from "./services/dbService.js";
 import { jsonExport } from "./services/exportService.js";
+import { logger } from "./services/loggerService.js";
 import { NotificationService } from "./services/notificationService.js";
 import { TemplateService } from "./services/templateService.js";
 
@@ -14,10 +16,10 @@ const FILE_NAME = "vacantes_mep.json";
 const FILE_PATH = path.join(OUTPUT_DIR, FILE_NAME);
 
 async function main() {
-  console.log("🚀 Iniciando MEP Scraping Service...");
+  logger.info("🚀 Iniciando MEP Scraping Service...");
   const startTime = Date.now();
   // Indicar si estamos corriendo en desarrollo o producción
-  console.log(`🔧 Modo: ${CONFIG.isProd ? "PRODUCCIÓN" : "DESARROLLO"}`);
+  logger.info(`🔧 Modo: ${CONFIG.isProd ? "PRODUCCIÓN" : "DESARROLLO"}`);
 
   // 1. Inicializar los servicios que se usarán en todo el flujo. El
   //    templateService decide qué configuración de plantillas usar según
@@ -31,27 +33,29 @@ async function main() {
     //    de regiones que no nos interesan o no tenemos templates.
     //    Si no hay regiones configuradas, el scraper buscará en todas las regiones.
     const allowedRegions = templateService.getAllRegions();
-    const data = await scrapeVacantesMEP(allowedRegions);
 
-    //****DATOS DE PRUEBA */
-    // const { default: data } = await import("./data/vacantes_mep.json", {
-    //   with: { type: "json" },
-    // });
-    //** */
+    // Medir duración del Scraping específicamente
+    const scrapingStart = Date.now();
+    const data = await scrapeVacantesMEP(allowedRegions);
+    const scrapingMs = Date.now() - scrapingStart;
+
     if (data && data.length > 0) {
-      console.log(`📊 Se encontraron ${data.length} vacantes en total.`);
+      logger.info(
+        { durationMs: scrapingMs },
+        `📊 Scraping finalizado (${data.length} vacantes). Tiempo: ${formatDuration(scrapingMs)}`,
+      );
 
       // 3. Filtrado/guardado en la base de datos. Este método guarda y retorna sólo
       //    las vacantes nuevas que no existían antes (identificadas por el
       //    campo VACANTE/mepId). Los duplicados se omiten aquí.
-      console.log("🔍 Verificando duplicados en la base de datos...");
+      logger.info("🔍 Verificando duplicados en la base de datos...");
       const newData = await DbService.filterAndSaveNewVacancies(data);
 
       if (newData.length > 0) {
-        console.log(`✨ ${newData.length} nuevas vacantes detectadas.`);
+        logger.info(`✨ ${newData.length} nuevas vacantes detectadas.`);
 
         // 4. Guardar un respaldo en formato JSON con todas las vacantes extraídas
-        jsonExport(FILE_PATH, data);
+        await jsonExport(FILE_PATH, data);
       }
 
       // 5. Notificaciones por correo: se trabaja únicamente con las
@@ -64,15 +68,20 @@ async function main() {
     } else {
       // Si no hay vacantes nuevas, evitamos los pasos de export y mail.
 
-      console.log("⚠️ No se encontraron vacantes en el scraping.");
+      logger.warn("⚠️ No se encontraron vacantes en el scraping.");
     }
 
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`✨ Proceso finalizado con éxito en ${duration}s`);
+    const totalMs = Date.now() - startTime;
+    logger.info(
+      { totalDurationMs: totalMs },
+      `✨ TIEMPO TOTAL DEL PROCESO: ${formatDuration(totalMs)}`,
+    );
   } catch (error) {
     // Cualquier excepción no manejada provoca la salida con código 1.
-    console.error("❌ Error crítico en el flujo principal:");
-    console.error(error.message);
+    await logger.error("❌ Error crítico en el flujo principal:", {
+      message: error.message,
+      stack: error.stack,
+    });
     process.exit(1);
   }
 }

@@ -35,3 +35,13 @@ model NotificationLog {
   @@unique([mepId, template])
   @@map("log_notificaciones")
 }
+
+model SystemLog {
+  id        Int      @id @default(autoincrement())
+  level     String   // "error", "warn", "info"
+  message   String   @db.Text
+  details   String?  @db.Text
+  timestamp DateTime @default(now()) @map("timestamp") @db.Timestamptz
+
+  @@map("log_sistema")
+}

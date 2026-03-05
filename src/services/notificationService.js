@@ -1,5 +1,6 @@
 ﻿import { filterVacancies } from "../helpers/helpers.js";
 import { prisma } from "./dbService.js";
+import { logger } from "./loggerService.js";
 import { sendEmail } from "./mailService.js";
 import { createHtmlTable } from "./renderService.js";
 
@@ -16,11 +17,11 @@ export class NotificationService {
   async processNotificationsFromDB(fileInfo) {
     const templates = this.templateService.templates.users;
 
-    console.log("📂 Obteniendo vacantes de la base de datos...");
+    logger.info("📂 Obteniendo vacantes de la base de datos...");
     const allVacancies = await prisma.vacancy.findMany();
 
     if (allVacancies.length === 0) {
-      console.log("⚠️ No hay vacantes en la base de datos para notificar.");
+      logger.info("⚠️ No hay vacantes en la base de datos para notificar.");
       return;
     }
 
@@ -36,7 +37,7 @@ export class NotificationService {
           ).map((log) => log.mepId),
         );
 
-        console.log(
+        logger.info(
           `🔍 ${notifiedMepIds.size} vacantes ya notificadas para "${tplName}".`,
         );
 
@@ -47,13 +48,13 @@ export class NotificationService {
         ).filter((v) => !notifiedMepIds.has(v.mepId));
 
         if (filteredData.length === 0) {
-          console.log(
+          logger.warn(
             `\n⚠️ "${tplName}" no tiene vacantes pendientes por notificar.`,
           );
           return { tplName, success: false, reason: "no_pending_matches" };
         }
 
-        console.log(
+        logger.info(
           `\n📨 Procesando "${tplName}" (${filteredData.length} vacantes pendientes)...`,
         );
 
@@ -64,38 +65,42 @@ export class NotificationService {
           fileInfo,
           tablaHTML,
         );
-        //TODO; ESTO SE TIENE QUE MOVER AL dbService.
-        // registrar notificaciones independientemente del envío
-        const insertResult = await prisma.notificationLog.createMany({
-          data: filteredData.map((v) => ({
-            mepId: v.mepId,
-            template: tplName,
-          })),
-          skipDuplicates: true,
-        });
-        console.log(
-          `📝 Se registraron ${insertResult.count} filas en log_notificaciones.`,
-        );
-
-        console.log(`📧 Enviando correo para ${tplName}...`);
+        logger.info(`📧 Enviando correo para ${tplName}...`);
         const result = await sendEmail(mailContent);
 
         if (result.accepted && result.accepted.length > 0) {
-          console.log(`✅ Correo enviado a: ${tplConfig.to}`);
+          logger.info(`✅ Correo enviado a: ${tplConfig.to}`);
+
+          //TODO; ESTO SE TIENE QUE MOVER AL dbService.
+          // registrar notificaciones solo si el envío fue exitoso
+          const insertResult = await prisma.notificationLog.createMany({
+            data: filteredData.map((v) => ({
+              mepId: v.mepId,
+              template: tplName,
+            })),
+            skipDuplicates: true,
+          });
+          logger.info(
+            `📝 Se registraron ${insertResult.count} filas en log_notificaciones para ${tplName}.`,
+          );
+
           return { tplName, success: true, count: filteredData.length };
         } else {
-          console.error(`❌ Error al enviar correo para ${tplName}`);
+          await logger.error(
+            `❌ Error al enviar correo para ${tplName}`,
+            result,
+          );
           return { tplName, success: false, reason: "send_error" };
         }
       }),
     );
 
-    notificationResults.forEach((r) => {
+    notificationResults.forEach(async (r) => {
       if (r.status === "rejected") {
-        console.error("❌ Error en notificación:", r.reason);
+        await logger.error("❌ Error en notificación:", r.reason);
       }
     });
 
-    console.log("\n✅ Proceso de envío completado.");
+    logger.info("\n✅ Proceso de envío completado.");
   }
 }

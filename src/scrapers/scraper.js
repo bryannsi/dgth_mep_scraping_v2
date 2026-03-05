@@ -1,6 +1,7 @@
 import puppeteer from "puppeteer";
 import { CONFIG } from "../config/config.js";
 import { extractTableData, getRegions } from "../helpers//helpers.js";
+import { logger } from "../services/loggerService.js";  
 
 export async function scrapeVacantesMEP(allowedRegions = []) {
   const browser = await puppeteer.launch(CONFIG.puppeteer);
@@ -30,14 +31,14 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
         : regions; // Fallback: todas las regionales encontradas en el selector del MEP
 
     if (regionsList.length > 0) {
-      console.log(
+      logger.info(
         `🎯 Filtrando scraping para regiones: ${regionsList.join(", ")}`,
       );
-      console.log(`✅ ${regionsToProcess.length} regiones coinciden.`);
+      logger.info(`✅ ${regionsToProcess.length} regiones coinciden.`);
     }
 
     for (const region of regionsToProcess) {
-      console.log(`📍 Procesando región: ${region.text}`);
+      logger.info(`📍 Procesando región: ${region.text}`);
 
       // Usar evaluate para asegurar que se dispare el evento 'change' (necesario en algunos entornos Blazor)
       await page.evaluate((val) => {
@@ -55,7 +56,7 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
       let pageNum = 1;
 
       while (hasNextPage) {
-        console.log(`📄 Procesando página ${pageNum} de ${region.text}`);
+        logger.info(`📄 Procesando página ${pageNum} de ${region.text}`);
 
         // Wait for table to be visible/updated
         await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -83,7 +84,7 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
         });
 
         results.push(...mappedVacancies);
-        console.log(
+        logger.info(
           `✨ Encontradas ${tableRows.length} vacantes en pág ${pageNum} (${newVacancies.length} nuevas)`,
         );
 
@@ -94,13 +95,13 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
         );
 
         if (nextButton) {
-          console.log("➡️ Avanzando a la siguiente página...");
+          logger.info("➡️ Avanzando a la siguiente página...");
           await nextButton.click();
           pageNum++;
           // Small wait to ensure UI reacts to click before next loop iteration's wait
           await new Promise((resolve) => setTimeout(resolve, 500));
         } else {
-          console.log("⏹️ No hay más páginas en esta región.");
+          logger.info("⏹️ No hay más páginas en esta región.");
           hasNextPage = false;
         }
       }
@@ -108,7 +109,7 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
 
     return results;
   } catch (err) {
-    console.error("Error during scraping:", err);
+    await logger.error("Error during scraping:", err);
     return [];
   } finally {
     await browser.close();

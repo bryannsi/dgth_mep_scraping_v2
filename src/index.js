@@ -40,10 +40,7 @@ async function main() {
     const scrapingMs = Date.now() - scrapingStart;
 
     if (data && data.length > 0) {
-      logger.info(
-        { durationMs: scrapingMs },
-        `📊 Scraping finalizado (${data.length} vacantes). Tiempo: ${formatDuration(scrapingMs)}`,
-      );
+      logger.info(`📊 Scraping finalizado (${data.length} vacantes). Tiempo: ${formatDuration(scrapingMs)}`);
 
       // 3. Filtrado/guardado en la base de datos. Este método guarda y retorna sólo
       //    las vacantes nuevas que no existían antes (identificadas por el
@@ -72,10 +69,7 @@ async function main() {
     }
 
     const totalMs = Date.now() - startTime;
-    logger.info(
-      { totalDurationMs: totalMs },
-      `✨ TIEMPO TOTAL DEL PROCESO: ${formatDuration(totalMs)}`,
-    );
+    logger.info(`✨ TIEMPO TOTAL DEL PROCESO: ${formatDuration(totalMs)}`);
   } catch (error) {
     // Cualquier excepción no manejada provoca la salida con código 1.
     await logger.error("❌ Error crítico en el flujo principal:", {

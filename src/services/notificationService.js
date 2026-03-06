@@ -17,45 +17,51 @@ export class NotificationService {
   async processNotificationsFromDB(fileInfo) {
     const templates = this.templateService.templates.users;
 
-    logger.info("📂 Obteniendo vacantes de la base de datos...");
-    const allVacancies = await prisma.vacancy.findMany();
-
-    if (allVacancies.length === 0) {
-      logger.info("⚠️ No hay vacantes en la base de datos para notificar.");
-      return;
-    }
+    logger.info(
+      "📂 Obteniendo vacantes pendientes de notificar de la base de datos...",
+    );
 
     const notificationResults = await Promise.allSettled(
       Object.entries(templates).map(async ([tplName, tplConfig]) => {
-        // IDs (mepId) ya notificados para el template
-        const notifiedMepIds = new Set(
-          (
-            await prisma.notificationLog.findMany({
-              where: { template: tplName },
-              select: { mepId: true },
-            })
-          ).map((log) => log.mepId),
-        );
+        // Mejora B: Filtrado a nivel de Base de Datos.
+        // En lugar de traer TODAS las vacantes a memoria y cruzar con logs,
+        // delegamos a PostgreSQL que nos entregue sólo aquellas que:
+        // 1. Aún no tienen un registro de envío para ESTE template.
+        const pendingVacanciesDB = await prisma.vacancy.findMany({
+          where: {
+            NOT: {
+              notificationLogs: {
+                some: {
+                  template: tplName,
+                },
+              },
+            },
+          },
+        });
 
-        logger.info(
-          `🔍 ${notifiedMepIds.size} vacantes ya notificadas para "${tplName}".`,
-        );
-
-        const filteredData = filterVacancies(
-          allVacancies,
-          tplConfig.keywords || [],
-          tplConfig.regions || [],
-        ).filter((v) => !notifiedMepIds.has(v.mepId));
-
-        if (filteredData.length === 0) {
+        if (pendingVacanciesDB.length === 0) {
           logger.warn(
-            `\n⚠️ "${tplName}" no tiene vacantes pendientes por notificar.`,
+            `\n⚠️ "${tplName}" no tiene vacantes pendientes por notificar (todas fueron procesadas previamente).`,
           );
           return { tplName, success: false, reason: "no_pending_matches" };
         }
 
+        // 2. Sobre ese subset ya reducido, aplicamos el filtro de palabras clave/regiones de este template
+        const filteredData = filterVacancies(
+          pendingVacanciesDB,
+          tplConfig.keywords || [],
+          tplConfig.regions || [],
+        );
+
+        if (filteredData.length === 0) {
+          logger.warn(
+            `\n⚠️ "${tplName}" no tiene vacantes que coincidan con sus filtros de keywords/regiones.`,
+          );
+          return { tplName, success: false, reason: "no_keyword_matches" };
+        }
+
         logger.info(
-          `\n📨 Procesando "${tplName}" (${filteredData.length} vacantes pendientes)...`,
+          `\n📨 Procesando "${tplName}" (${filteredData.length} vacantes que coinciden con sus filtros)...`,
         );
 
         // crear tabla HTML y preparar correo

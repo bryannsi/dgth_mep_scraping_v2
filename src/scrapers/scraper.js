@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer";
 import { CONFIG } from "../config/config.js";
 import { extractTableData, getRegions } from "../helpers//helpers.js";
-import { logger } from "../services/loggerService.js";  
+import { logger } from "../services/loggerService.js";
 
 export async function scrapeVacantesMEP(allowedRegions = []) {
   const browser = await puppeteer.launch(CONFIG.puppeteer);
@@ -58,10 +58,41 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
       while (hasNextPage) {
         logger.info(`📄 Procesando página ${pageNum} de ${region.text}`);
 
-        // Wait for table to be visible/updated
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        // Implementación Mejora A: Espera reactiva
+        try {
+          await page.waitForFunction(
+            () => {
+              const rows = document.querySelectorAll("table tbody tr");
+              return rows.length > 0;
+            },
+            { timeout: 10000 },
+          );
+          // Pequeño buffer para permitir estabilización del DOM tras el renderizado reactivo
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } catch (error) {
+          logger.warn(
+            `⚠️ Timeout esperando renderizado de la tabla en página ${pageNum}.`,
+          );
+        }
 
         const tableRows = await extractTableData(page);
+
+        // Mitigación de fragilidad HTML: Validación de cabeceras en primera página
+        if (pageNum === 1 && tableRows.length > 0) {
+          const sampleRow = tableRows[0];
+          if (!("VACANTE" in sampleRow) || !("CLASE DE PUESTO" in sampleRow)) {
+            logger.error(
+              `❌ ALERTA CRÍTICA: La estructura de la tabla HTML ha cambiado. Columnas clave no encontradas.`,
+            );
+            logger.error(
+              `Cabeceras detectadas: ${Object.keys(sampleRow).join(", ")}`,
+            );
+            logger.error(
+              `Se aborta el scraping de esta región para proteger la base de datos.`,
+            );
+            break; // Salimos del while para saltar a la siguiente región/terminar
+          }
+        }
 
         // Filtrar duplicados y actualizar la lista de IDs vistos
         const newVacancies = tableRows.filter(
@@ -98,8 +129,9 @@ export async function scrapeVacantesMEP(allowedRegions = []) {
           logger.info("➡️ Avanzando a la siguiente página...");
           await nextButton.click();
           pageNum++;
-          // Small wait to ensure UI reacts to click before next loop iteration's wait
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          // Esperamos activamente a que la tabla "desaparezca" o cambie de estado
+          // para no leer la misma tabla dos veces si el rendering es lento.
+          await new Promise((resolve) => setTimeout(resolve, 1500));
         } else {
           logger.info("⏹️ No hay más páginas en esta región.");
           hasNextPage = false;

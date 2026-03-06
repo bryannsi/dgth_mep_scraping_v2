@@ -23,7 +23,12 @@ export class NotificationService {
 
     const notificationResults = await Promise.allSettled(
       Object.entries(templates).map(async ([tplName, tplConfig]) => {
-        // 1. Obtener vacantes pendientes (Delegado a DbService)
+        // 1. Validar suscripción antes de procesar
+        if (!(await DbService.isClientAuthorized(tplName))) {
+          return { tplName, success: false, reason: "subscription_invalid" };
+        }
+
+        // 2. Obtener vacantes pendientes (Delegado a DbService)
         const pendingVacanciesDB =
           await DbService.getPendingVacanciesByTemplate(tplName);
 
@@ -34,7 +39,7 @@ export class NotificationService {
           return { tplName, success: false, reason: "no_pending_matches" };
         }
 
-        // 2. Sobre ese subset ya reducido, aplicamos el filtro de palabras clave/regiones
+        // 3. Sobre ese subset ya reducido, aplicamos el filtro de palabras clave/regiones
         const filteredData = filterVacancies(
           pendingVacanciesDB,
           tplConfig.keywords || [],

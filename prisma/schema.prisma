@@ -21,6 +21,8 @@ model Vacancy {
 
   notificationLogs NotificationLog[]
 
+  @@index([bitacoraCreacion], name: "idx_vacantes_bitacora_creacion")
+  @@index([rige], name: "idx_vacantes_rige")
   @@map("vacantes")
 }
 
@@ -44,4 +46,29 @@ model SystemLog {
   timestamp DateTime @default(now()) @map("timestamp") @db.Timestamptz
 
   @@map("log_sistema")
+}
+
+model Client {
+  id               Int       @id @default(autoincrement())
+  templateKey      String    @unique @map("template_key")
+  email            String    @unique @db.Text
+  expirationDate   DateTime  @map("fecha_vencimiento") @db.Date
+  isActive         Boolean   @default(true) @map("esta_activo")
+  
+  payments         Payment[]
+  createdAt        DateTime  @default(now()) @map("fecha_creacion") @db.Timestamptz
+
+  @@map("clientes")
+}
+
+model Payment {
+  id               Int      @id @default(autoincrement())
+  clientId         Int      @map("cliente_id")
+  amount           Decimal  @map("monto") @db.Decimal(10, 2)
+  paymentDate      DateTime @default(now()) @map("fecha_pago") @db.Timestamptz
+  reference        String?  @map("referencia") @db.Text
+  
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("pagos")
 }

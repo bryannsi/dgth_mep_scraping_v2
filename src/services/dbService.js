@@ -110,4 +110,62 @@ export class DbService {
       skipDuplicates: true,
     });
   }
+
+  /**
+   * Verifica si un cliente/template tiene permiso para recibir notificaciones.
+   * Criterios: Debe existir en BD, estar habilitado y no haber vencido (Hora CR).
+   * @param {string} templateKey - Clave del template (ej: "template1").
+   * @returns {Promise<boolean>} - True si está autorizado, False en cualquier otro caso.
+   */
+  static async isClientAuthorized(templateKey) {
+    try {
+      // 1. Obtener "Hoy" en Costa Rica (ISO YYYY-MM-DD)
+      const hoyCR = new Date().toLocaleDateString("en-CA", {
+        timeZone: "America/Costa_Rica",
+      });
+
+      // 2. Buscar al cliente
+      const client = await prisma.client.findUnique({
+        where: { templateKey },
+        select: {
+          isActive: true,
+          expirationDate: true,
+        },
+      });
+
+      if (!client) {
+        logger.warn(
+          `⚠️ Cliente "${templateKey}" no registrado en la base de datos de suscripciones.`,
+        );
+        return false;
+      }
+
+      if (!client.isActive) {
+        logger.warn(
+          `🚫 Cliente "${templateKey}" desactivado manualmente por administración.`,
+        );
+        return false;
+      }
+
+      // 3. Comparar fechas (Sprint: YYYY-MM-DD es seguro para comparar texto)
+      const venceCR = client.expirationDate.toLocaleDateString("en-CA", {
+        timeZone: "America/Costa_Rica",
+      });
+
+      if (venceCR < hoyCR) {
+        logger.warn(
+          `📅 Suscripción de "${templateKey}" vencida el ${venceCR} (Hora CR).`,
+        );
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      await logger.error(
+        `❌ Error crítico al validar suscripción de ${templateKey}`,
+        error,
+      );
+      return false;
+    }
+  }
 }

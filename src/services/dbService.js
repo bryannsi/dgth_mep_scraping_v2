@@ -1,12 +1,6 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
-import pg from "pg";
-import { PRISMA_CONFIG } from "../config/config.js";
 import { parseDate } from "../helpers/helpers.js";
-
-const pool = new pg.Pool({ connectionString: PRISMA_CONFIG.datasource.url });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+import { logger } from "../services/loggerService.js";
+import { prisma } from "./prismaClient.js";
 
 export { prisma };
 
@@ -35,7 +29,11 @@ export class DbService {
     });
 
     const existingIds = new Set(existingVacancies.map((v) => v.mepId));
-    console.dir({ totalVacancies: vacancies.length, uniqueMepIds: mepIds.length, existingInDB: existingIds.size });
+    logger.info({
+      totalVacancies: vacancies.length,
+      uniqueMepIds: mepIds.length,
+      existingInDB: existingIds.size,
+    });
     // 3. Filtrar el conjunto original dejando únicamente las vacantes que NO
     //    aparecen en la base de datos (nuevos candidatos a guardar).
     const newVacanciesToSave = vacancies.filter((v) => {
@@ -44,7 +42,7 @@ export class DbService {
     });
 
     if (newVacanciesToSave.length === 0) {
-      console.log("No hay vacantes nuevas para guardar.");
+      logger.info("No hay vacantes nuevas para guardar.");
       return [];
     }
 
@@ -69,9 +67,47 @@ export class DbService {
       skipDuplicates: true,
     });
 
-    console.log(
+    logger.info(
       `✅ Bulk Insert: Se guardaron ${result.count} vacantes nuevas.`,
     );
     return newVacanciesToSave;
+  }
+
+  /**
+   * Obtiene las vacantes que no han sido notificadas para un template específico.
+   * Mejora B: Filtrado a nivel de Base de Datos para evitar OOM.
+   * @param {string} templateName - Nombre del template (ej: "template1").
+   * @returns {Promise<Array>} - Lista de objetos Vacancy.
+   */
+  static async getPendingVacanciesByTemplate(templateName) {
+    return await prisma.vacancy.findMany({
+      where: {
+        NOT: {
+          notificationLogs: {
+            some: {
+              template: templateName,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Registra masivamente las notificaciones enviadas en la bitácora.
+   * @param {string} templateName - Nombre del template.
+   * @param {Array} vacancies - Lista de vacantes notificadas.
+   * @returns {Promise<Object>} - Resultado de la operación createMany.
+   */
+  static async logNotifications(templateName, vacancies) {
+    if (!vacancies?.length) return { count: 0 };
+
+    return await prisma.notificationLog.createMany({
+      data: vacancies.map((v) => ({
+        mepId: v.mepId,
+        template: templateName,
+      })),
+      skipDuplicates: true,
+    });
   }
 }

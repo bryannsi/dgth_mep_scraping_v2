@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import pino from "pino";
 import { CONFIG } from "../config/config.js";
-import { prisma } from "./dbService.js";
+import { prisma } from "./prismaClient.js";
 
 const baseLogger = pino({
   /*

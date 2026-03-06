@@ -1,5 +1,5 @@
 ﻿import { filterVacancies } from "../helpers/helpers.js";
-import { prisma } from "./dbService.js";
+import { DbService } from "./dbService.js";
 import { logger } from "./loggerService.js";
 import { sendEmail } from "./mailService.js";
 import { createHtmlTable } from "./renderService.js";
@@ -23,21 +23,9 @@ export class NotificationService {
 
     const notificationResults = await Promise.allSettled(
       Object.entries(templates).map(async ([tplName, tplConfig]) => {
-        // Mejora B: Filtrado a nivel de Base de Datos.
-        // En lugar de traer TODAS las vacantes a memoria y cruzar con logs,
-        // delegamos a PostgreSQL que nos entregue sólo aquellas que:
-        // 1. Aún no tienen un registro de envío para ESTE template.
-        const pendingVacanciesDB = await prisma.vacancy.findMany({
-          where: {
-            NOT: {
-              notificationLogs: {
-                some: {
-                  template: tplName,
-                },
-              },
-            },
-          },
-        });
+        // 1. Obtener vacantes pendientes (Delegado a DbService)
+        const pendingVacanciesDB =
+          await DbService.getPendingVacanciesByTemplate(tplName);
 
         if (pendingVacanciesDB.length === 0) {
           logger.warn(
@@ -46,7 +34,7 @@ export class NotificationService {
           return { tplName, success: false, reason: "no_pending_matches" };
         }
 
-        // 2. Sobre ese subset ya reducido, aplicamos el filtro de palabras clave/regiones de este template
+        // 2. Sobre ese subset ya reducido, aplicamos el filtro de palabras clave/regiones
         const filteredData = filterVacancies(
           pendingVacanciesDB,
           tplConfig.keywords || [],
@@ -64,31 +52,40 @@ export class NotificationService {
           `\n📨 Procesando "${tplName}" (${filteredData.length} vacantes que coinciden con sus filtros)...`,
         );
 
-        // crear tabla HTML y preparar correo
+        // Crear tabla HTML y preparar correo
         const tablaHTML = createHtmlTable(filteredData);
         const mailContent = this.templateService.getMailTemplate(
           tplName,
           fileInfo,
           tablaHTML,
         );
+
         logger.info(`📧 Enviando correo para ${tplName}...`);
         const result = await sendEmail(mailContent);
 
         if (result.accepted && result.accepted.length > 0) {
           logger.info(`✅ Correo enviado a: ${tplConfig.to}`);
 
-          //TODO; ESTO SE TIENE QUE MOVER AL dbService.
-          // registrar notificaciones solo si el envío fue exitoso
-          const insertResult = await prisma.notificationLog.createMany({
-            data: filteredData.map((v) => ({
-              mepId: v.mepId,
-              template: tplName,
-            })),
-            skipDuplicates: true,
-          });
-          logger.info(
-            `📝 Se registraron ${insertResult.count} filas en log_notificaciones para ${tplName}.`,
-          );
+          // 3. Registrar notificaciones (Robustez: Manejo de fallos en DB tras envío exitoso)
+          try {
+            const insertResult = await DbService.logNotifications(
+              tplName,
+              filteredData,
+            );
+            logger.info(
+              `📝 Se registraron ${insertResult.count} filas en log_notificaciones para ${tplName}.`,
+            );
+          } catch (dbError) {
+            await logger.error(
+              `🚨 ALERTA CRÍTICA DE DUPLICIDAD: El correo para ${tplName} se ENVIÓ, pero falló el registro en la base de datos.`,
+              {
+                template: tplName,
+                vacancies: filteredData.map((v) => v.mepId),
+                error: dbError.message,
+              },
+            );
+            // No retornamos false aquí porque el correo SÍ se envió.
+          }
 
           return { tplName, success: true, count: filteredData.length };
         } else {

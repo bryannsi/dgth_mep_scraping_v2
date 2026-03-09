@@ -138,3 +138,27 @@ export function formatDuration(ms) {
     return minutes > 0 ? `${minutes}min ${seconds}s` : `${seconds}s`;
   }
 }
+/**
+ * Formatea una fecha o devuelve la de "hoy" en un locale y zona horaria específicos.
+ * @param {Date|string|null} date - Fecha a formatear. Si es null/undefined, usa "hoy".
+ * @param {string} locale - El locale a usar (ej: 'es-CR' para DD/MM/YYYY, 'en-CA' para YYYY-MM-DD).
+ * @param {object} options - Opciones adicionales de Intl.DateTimeFormat.
+ * @returns {string} - La fecha formateada o "N/A" si es inválida.
+ */
+export function formatDate(date = null, locale = "es-CR", options = {}) {
+  const finalDate = date ? new Date(date) : new Date();
+
+  // Si la fecha es inválida y no era null (intento de parseo fallido)
+  if (isNaN(finalDate.getTime()) && date !== null) return "N/A";
+
+  // Configuración base con zona horaria de CR
+  const baseOptions = {
+    timeZone: "America/Costa_Rica",
+    ...(locale === "es-CR"
+      ? { day: "2-digit", month: "2-digit", year: "numeric" }
+      : {}),
+    ...options,
+  };
+
+  return finalDate.toLocaleDateString(locale, baseOptions);
+}

@@ -1,4 +1,5 @@
-import { parseDate } from "../helpers/helpers.js";
+import { CONFIG } from "../config/config.js";
+import { formatDate, parseDate } from "../helpers/helpers.js";
 import { logger } from "../services/loggerService.js";
 import { prisma } from "./prismaClient.js";
 
@@ -113,59 +114,102 @@ export class DbService {
 
   /**
    * Verifica si un cliente/template tiene permiso para recibir notificaciones.
-   * Criterios: Debe existir en BD, estar habilitado y no haber vencido (Hora CR).
+   * Retorna el objeto cliente completo si está autorizado.
    * @param {string} templateKey - Clave del template (ej: "template1").
-   * @returns {Promise<boolean>} - True si está autorizado, False en cualquier otro caso.
+   * @returns {Promise<Object|null>} - Objeto Client o null si no está autorizado.
    */
   static async isClientAuthorized(templateKey) {
     try {
-      // 1. Obtener "Hoy" en Costa Rica (ISO YYYY-MM-DD)
-      const hoyCR = new Date().toLocaleDateString("en-CA", {
-        timeZone: "America/Costa_Rica",
-      });
+      const hoyCR = formatDate(null, "en-CA");
 
-      // 2. Buscar al cliente
       const client = await prisma.client.findUnique({
         where: { templateKey },
-        select: {
-          isActive: true,
-          expirationDate: true,
-        },
       });
 
       if (!client) {
         logger.warn(
           `⚠️ Cliente "${templateKey}" no registrado en la base de datos de suscripciones.`,
         );
-        return false;
+        return null;
       }
 
       if (!client.isActive) {
         logger.warn(
           `🚫 Cliente "${templateKey}" desactivado manualmente por administración.`,
         );
-        return false;
+        return null;
       }
 
-      // 3. Comparar fechas (Sprint: YYYY-MM-DD es seguro para comparar texto)
-      const venceCR = client.expirationDate.toLocaleDateString("en-CA", {
-        timeZone: "America/Costa_Rica",
-      });
+      const venceCR = formatDate(client.expirationDate, "en-CA");
 
       if (venceCR < hoyCR) {
         logger.warn(
           `📅 Suscripción de "${templateKey}" vencida el ${venceCR} (Hora CR).`,
         );
-        return false;
+        return null;
       }
 
-      return true;
+      return client;
     } catch (error) {
       await logger.error(
         `❌ Error crítico al validar suscripción de ${templateKey}`,
         error,
       );
-      return false;
+      return null;
     }
+  }
+
+  /**
+   * Obtiene todos los clientes autorizados (activos y vigentes).
+   * @returns {Promise<Array>} - Lista de objetos de cliente.
+   */
+  static async getAuthorizedClients() {
+    try {
+      //TODO: revisar si esta funcion se puede mezclar con la funcion formatDateCR de helpers.js, habria que pasar parametros para que sea funcional en ambos procesos
+      const hoyCR = formatDate(null, "en-CA");
+
+      const where = {
+        isActive: true,
+        expirationDate: {
+          gte: new Date(hoyCR),
+        },
+      };
+
+      // Si estamos en producción: solo clientes reales (isTest: false).
+      // Si estamos en desarrollo: solo clientes de prueba (isTest: true).
+      where.isTest = CONFIG.isProd ? false : true;
+
+      return await prisma.client.findMany({ where });
+    } catch (error) {
+      await logger.error("❌ Error al obtener clientes autorizados", error);
+      return [];
+    }
+  }
+
+  /**
+   * TODO: REVISAR ESTA FUNCION SI DEBE ESTAR EN dbService.js, ya que no utiliza la DB
+   * Extrae regiones únicas de una lista de clientes.
+   * Si algún cliente busca en "todas", retorna un arreglo vacío [].
+   * @param {Array} clients - Lista de clientes de la base de datos.
+   * @returns {string[]} - Lista de regiones en mayúsculas o [] para todas.
+   */
+  static extractRegionsFromClients(clients) {
+    const regions = new Set();
+
+    for (const client of clients) {
+      const configRegions = client.config?.regions;
+      // Si CUALQUIER cliente activo NO tiene regiones definidas (search all),
+      // el scraper debe buscar en todas las regiones.
+      if (
+        !configRegions ||
+        !Array.isArray(configRegions) ||
+        configRegions.length === 0
+      ) {
+        return [];
+      }
+      configRegions.forEach((reg) => regions.add(reg.toUpperCase().trim()));
+    }
+
+    return Array.from(regions);
   }
 }

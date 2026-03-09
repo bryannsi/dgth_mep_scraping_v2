@@ -1,4 +1,4 @@
-﻿import { filterVacancies } from "../helpers/helpers.js";
+﻿import { filterVacancies, formatDate } from "../helpers/helpers.js";
 import { DbService } from "./dbService.js";
 import { logger } from "./loggerService.js";
 import { sendEmail } from "./mailService.js";
@@ -8,59 +8,58 @@ export class NotificationService {
   constructor(templateService) {
     this.templateService = templateService;
   }
-  //TODO: este metodo processNotificationsFromDB debe estar en la capa DB
   /**
    * Procesa notificaciones basadas en el estado actual de la BD,
-   * notificando solo vacantes que no hayan sido notificadas aún para cada template.
+   * notificando solo vacantes que no hayan sido notificadas aún para cada cliente autorizado.
    * @param {Object} fileInfo - Información del archivo adjunto { name, path }
+   * @param {Array} authorizedClients - Lista de clientes autorizados ya cargados.
    */
-  async processNotificationsFromDB(fileInfo) {
-    const templates = this.templateService.templates.users;
-
-    logger.info(
-      "📂 Obteniendo vacantes pendientes de notificar de la base de datos...",
-    );
+  async processNotificationsFromDB(fileInfo, authorizedClients) {
+    if (!authorizedClients || authorizedClients.length === 0) {
+      logger.warn(
+        "⚠️ No se proporcionaron clientes autorizados para notificar.",
+      );
+      return;
+    }
 
     const notificationResults = await Promise.allSettled(
-      Object.entries(templates).map(async ([tplName, tplConfig]) => {
-        // 1. Validar suscripción antes de procesar
-        if (!(await DbService.isClientAuthorized(tplName))) {
-          return { tplName, success: false, reason: "subscription_invalid" };
-        }
+      authorizedClients.map(async (client) => {
+        const tplName = client.templateKey;
+        const config = client.config || {};
 
-        // 2. Obtener vacantes pendientes (Delegado a DbService)
+        // 1. Obtener vacantes pendientes (Delegado a DbService)
         const pendingVacanciesDB =
           await DbService.getPendingVacanciesByTemplate(tplName);
 
         if (pendingVacanciesDB.length === 0) {
           logger.warn(
-            `\n⚠️ "${tplName}" no tiene vacantes pendientes por notificar (todas fueron procesadas previamente).`,
+            `\n⚠️ "${tplName}" no tiene vacantes pendientes por notificar.`,
           );
           return { tplName, success: false, reason: "no_pending_matches" };
         }
 
-        // 3. Sobre ese subset ya reducido, aplicamos el filtro de palabras clave/regiones
+        // 2. Aplicar filtros (keywords/regions) guardados en el JSON 'config' de la BD
         const filteredData = filterVacancies(
           pendingVacanciesDB,
-          tplConfig.keywords || [],
-          tplConfig.regions || [],
+          config.keywords || [],
+          config.regions || [],
         );
 
         if (filteredData.length === 0) {
           logger.warn(
-            `\n⚠️ "${tplName}" no tiene vacantes que coincidan con sus filtros de keywords/regiones.`,
+            `\n⚠️ "${tplName}" no tiene vacantes que coincidan con sus filtros en BD.`,
           );
           return { tplName, success: false, reason: "no_keyword_matches" };
         }
 
         logger.info(
-          `\n📨 Procesando "${tplName}" (${filteredData.length} vacantes que coinciden con sus filtros)...`,
+          `\n📨 Procesando "${tplName}" (${filteredData.length} vacantes nuevas)...`,
         );
 
-        // Crear tabla HTML y preparar correo
+        // 3. Crear tabla HTML y construir email desde el objeto Client
         const tablaHTML = createHtmlTable(filteredData);
-        const mailContent = this.templateService.getMailTemplate(
-          tplName,
+        const mailContent = this.templateService.getMailTemplateFromClient(
+          client,
           fileInfo,
           tablaHTML,
         );
@@ -69,27 +68,22 @@ export class NotificationService {
         const result = await sendEmail(mailContent);
 
         if (result.accepted && result.accepted.length > 0) {
-          logger.info(`✅ Correo enviado a: ${tplConfig.to}`);
+          logger.info(`✅ Correo enviado a: ${client.email}`);
 
-          // 3. Registrar notificaciones (Robustez: Manejo de fallos en DB tras envío exitoso)
+          // 4. Registrar notificaciones en bitácora
           try {
             const insertResult = await DbService.logNotifications(
               tplName,
-              filteredData,
+              filteredData, // Keeping filteredData as it's the expected argument for logNotifications
             );
             logger.info(
               `📝 Se registraron ${insertResult.count} filas en log_notificaciones para ${tplName}.`,
             );
           } catch (dbError) {
             await logger.error(
-              `🚨 ALERTA CRÍTICA DE DUPLICIDAD: El correo para ${tplName} se ENVIÓ, pero falló el registro en la base de datos.`,
-              {
-                template: tplName,
-                vacancies: filteredData.map((v) => v.mepId),
-                error: dbError.message,
-              },
+              `🚨 ALERTA CRÍTICA: Email enviado a ${tplName} pero falló registro en log.`,
+              dbError,
             );
-            // No retornamos false aquí porque el correo SÍ se envió.
           }
 
           return { tplName, success: true, count: filteredData.length };
@@ -105,7 +99,7 @@ export class NotificationService {
 
     notificationResults.forEach(async (r) => {
       if (r.status === "rejected") {
-        await logger.error("❌ Error en notificación:", r.reason);
+        await logger.error("❌ Error inesperado en notificación:", r.reason);
       }
     });
 

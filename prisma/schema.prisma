@@ -47,16 +47,23 @@ model SystemLog {
 
   @@map("log_sistema")
 }
-
 model Client {
-  id               Int       @id @default(autoincrement())
-  templateKey      String    @unique @map("template_key")
-  email            String    @unique @db.Text
-  expirationDate   DateTime  @map("fecha_vencimiento") @db.Date
-  isActive         Boolean   @default(true) @map("esta_activo")
-  
+  id               Int      @id @default(autoincrement())
+  templateKey      String   @unique @map("template_key") // "template1"
+  name             String?  @map("nombre") @db.Text
+  email            String   @map("email") @db.Text
+
+  isActive         Boolean  @default(true) @map("esta_activo")
+  isTest           Boolean  @default(false) @map("es_prueba")
+  paymentVerified  Boolean  @default(true) @map("pago_verificado")
+  expirationDate   DateTime @map("fecha_vencimiento") @db.Date
+
+  // Campo JSON para flexibilidad total (keywords, cc, subject, etc.)
+  config           Json     @default("{}") @map("configuracion")
+
   payments         Payment[]
-  createdAt        DateTime  @default(now()) @map("fecha_creacion") @db.Timestamptz
+  createdAt        DateTime @default(now()) @map("fecha_creacion") @db.Timestamptz
+  updatedAt        DateTime? @updatedAt @map("fecha_actualizacion") @db.Timestamptz
 
   @@map("clientes")
 }

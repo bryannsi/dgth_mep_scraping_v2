@@ -28,11 +28,13 @@ async function main() {
   const notificationService = new NotificationService(templateService);
 
   try {
+    // 1. Obtener clientes autorizados (una sola vez para todo el flujo)
+    const authorizedClients = await DbService.getAuthorizedClients();
+
     // 2. Scraper: pedimos al crawler las vacantes configuradas por regiones,
-    //    las cuales se obtienen de todos los templates. Esto para no hacer scraping
-    //    de regiones que no nos interesan o no tenemos templates.
-    //    Si no hay regiones configuradas, el scraper buscará en todas las regiones.
-    const allowedRegions = templateService.getAllRegions();
+    //    las cuales se extraen de los clientes ya cargados.
+    const allowedRegions =
+      DbService.extractRegionsFromClients(authorizedClients);
 
     // Medir duración del Scraping específicamente
     const scrapingStart = Date.now();
@@ -40,11 +42,11 @@ async function main() {
     const scrapingMs = Date.now() - scrapingStart;
 
     if (data && data.length > 0) {
-      logger.info(`📊 Scraping finalizado (${data.length} vacantes). Tiempo: ${formatDuration(scrapingMs)}`);
+      logger.info(
+        `📊 Scraping finalizado (${data.length} vacantes). Tiempo: ${formatDuration(scrapingMs)}`,
+      );
 
-      // 3. Filtrado/guardado en la base de datos. Este método guarda y retorna sólo
-      //    las vacantes nuevas que no existían antes (identificadas por el
-      //    campo VACANTE/mepId). Los duplicados se omiten aquí.
+      // 3. Filtrado/guardado en la base de datos.
       logger.info("🔍 Verificando duplicados en la base de datos...");
       const newData = await DbService.filterAndSaveNewVacancies(data);
 
@@ -55,13 +57,11 @@ async function main() {
         await jsonExport(FILE_PATH, data);
       }
 
-      // 5. Notificaciones por correo: se trabaja únicamente con las
-      //    vacantes nuevas (newData) y se aplica el filtrado de keywords
-      //    dentro de NotificationService.
-      await notificationService.processNotificationsFromDB({
-        name: FILE_NAME,
-        path: FILE_PATH,
-      });
+      // 5. Notificaciones por correo: pasamos los clientes ya cargados
+      await notificationService.processNotificationsFromDB(
+        { name: FILE_NAME, path: FILE_PATH },
+        authorizedClients,
+      );
     } else {
       // Si no hay vacantes nuevas, evitamos los pasos de export y mail.
 

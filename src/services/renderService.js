@@ -1,4 +1,5 @@
 // @ts-check
+import { formatDate } from "../helpers/helpers.js";
 
 /**
  * @typedef {Object} Vacante
@@ -42,23 +43,8 @@ export function createHtmlTable(vacantes) {
   // Generamos las tarjetas
   const cards = vacantes
     .map((v) => {
-      // Lógica de fechas
-      const rige = v.rige
-        ? new Date(v.rige).toLocaleDateString("es-CR", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            timeZone: "UTC", // <--- "Candado" de seguridad
-          })
-        : "N/A";
-      const vence = v.vence
-        ? new Date(v.vence).toLocaleDateString("es-CR", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            timeZone: "UTC", // <--- "Candado" de seguridad
-          })
-        : "N/A";
+      const rige = formatDate(v.rige);
+      const vence = formatDate(v.vence);
 
       return `
       <div style="${cardStyle}">

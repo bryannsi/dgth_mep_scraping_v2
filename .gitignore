@@ -149,3 +149,4 @@ src/data/
 /src/generated/prisma
 data/vacantes_mep.json
 nuevo .env
+End Points/

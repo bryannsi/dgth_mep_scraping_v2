@@ -98,26 +98,6 @@ const normalizeValue = (str) => {
 };
 
 /**
- * Helper para parsear fechas en formato DD/MM/YYYY (común en CR/MEP) o YYYY-MM-DD.
- * Asegura el offset de Costa Rica (-06:00) para evitar desfases de día en entornos UTC.
- * @param {string} dateStr - Fecha en texto.
- * @returns {Date|null} - Objeto Date o null si es inválida.
- */
-export function parseDate(dateStr) {
-  if (!dateStr) return null;
-  // Si está como DD/MM/YYYY
-  if (dateStr.includes("/")) {
-    const [day, month, year] = dateStr.split("/");
-    // Usamos el offset explícito de Costa Rica (-06:00) para evitar que
-    // al correr en GitHub Actions (UTC) se guarde como el día anterior.
-    return new Date(`${year}-${month}-${day}T00:00:00.000-06:00`);
-  }
-  // Fallback si es otro formato que JS entienda directamente
-  const date = new Date(dateStr);
-  return isNaN(date.getTime()) ? null : date;
-}
-
-/**
  * Convierte milisegundos a una cadena legible usando la API nativa Intl. DurationFormat
  * @param {number} ms - Milisegundos a formatear
  * @returns {string} - Tiempo formateado (ej: "2 min 15 s")
@@ -138,27 +118,63 @@ export function formatDuration(ms) {
     return minutes > 0 ? `${minutes}min ${seconds}s` : `${seconds}s`;
   }
 }
-/**
- * Formatea una fecha o devuelve la de "hoy" en un locale y zona horaria específicos.
- * @param {Date|string|null} date - Fecha a formatear. Si es null/undefined, usa "hoy".
- * @param {string} locale - El locale a usar (ej: 'es-CR' para DD/MM/YYYY, 'en-CA' para YYYY-MM-DD).
- * @param {object} options - Opciones adicionales de Intl.DateTimeFormat.
- * @returns {string} - La fecha formateada o "N/A" si es inválida.
- */
-export function formatDate(date = null, locale = "es-CR", options = {}) {
-  const finalDate = date ? new Date(date) : new Date();
 
-  // Si la fecha es inválida y no era null (intento de parseo fallido)
-  if (isNaN(finalDate.getTime()) && date !== null) return "N/A";
-
-  // Configuración base con zona horaria de CR
-  const baseOptions = {
+const FORMATTERS = {
+  "es-CR": new Intl.DateTimeFormat("es-CR", {
     timeZone: "America/Costa_Rica",
-    ...(locale === "es-CR"
-      ? { day: "2-digit", month: "2-digit", year: "numeric" }
-      : {}),
-    ...options,
-  };
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }),
+  "en-CA": new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Costa_Rica",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }),
+};
 
-  return finalDate.toLocaleDateString(locale, baseOptions);
+/**
+ * Clase personalizada que extiende Date para soportar formateo automático
+ * según el locale especificado al convertir a string.
+ */
+class SmartDate extends Date {
+  constructor(input, locale = "es-CR") {
+    // formatDate original usaba "hoy" si el input era null/undefined
+    const dateVal = input === null || input === undefined ? Date.now() : input;
+    super(dateVal);
+    this.locale = locale;
+  }
+
+  // Sobrescribimos toString para que al concatenar o llamar .toString()
+  // devuelva el formato deseado automáticamente.
+  toString() {
+    if (isNaN(this.getTime())) return "N/A";
+    return (
+      FORMATTERS[this.locale]?.format(this) ||
+      super.toLocaleDateString(this.locale, { timeZone: "America/Costa_Rica" })
+    );
+  }
 }
+
+/**
+ * Función unificada para parsear y formatear fechas.
+ * Retorna un objeto Date inteligente que se comporta como string al mostrarse.
+ * @param {any} input - Fecha en texto, objeto Date o null.
+ * @param {string} locale - Locale para el formateo (ej: 'es-CR', 'en-CA').
+ * @returns {SmartDate} - Instancia de SmartDate (hereda de Date).
+ */
+export function smartFormatDate(input, locale = "es-CR") {
+  let dateValue = input;
+  // Soporte para DD/MM/YYYY, DD-MM-YYYY y YYYY-MM-DD con offset CR (-06:00)
+  if (typeof input === "string") {
+    if (/^\d{1,2}[/-]\d{1,2}[/-]\d{4}/.test(input)) {
+      const [d, m, y] = input.split(/[/-]/);
+      dateValue = `${y}-${m}-${d}T00:00:00.000-06:00`;
+    } else if (/^\d{4}-\d{2}-\d{2}/.test(input)) {
+      dateValue = `${input.substring(0, 10)}T00:00:00.000-06:00`;
+    }
+  }
+  return new SmartDate(dateValue, locale);
+}
+

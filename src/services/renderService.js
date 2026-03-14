@@ -1,5 +1,5 @@
 // @ts-check
-import { formatDate } from "../helpers/helpers.js";
+import { smartFormatDate } from "../helpers/helpers.js";
 
 /**
  * @typedef {Object} Vacante
@@ -43,8 +43,8 @@ export function createHtmlTable(vacantes) {
   // Generamos las tarjetas
   const cards = vacantes
     .map((v) => {
-      const rige = formatDate(v.rige);
-      const vence = formatDate(v.vence);
+      const rige = smartFormatDate(v.rige).toString();
+      const vence = smartFormatDate(v.vence).toString();
 
       return `
       <div style="${cardStyle}">

@@ -75,14 +75,19 @@ export class DbService {
   }
 
   /**
-   * Obtiene las vacantes que no han sido notificadas para un template específico.
-   * Mejora B: Filtrado a nivel de Base de Datos para evitar OOM.
+   * Obtiene las vacantes que no han sido notificadas para un template específico,
+   * limitando la búsqueda a las últimas 24 horas (excluye vacantes vencidas).
    * @param {string} templateName - Nombre del template (ej: "template1").
    * @returns {Promise<Array>} - Lista de objetos Vacancy.
    */
   static async getPendingVacanciesByTemplate(templateName) {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
     return await prisma.vacancy.findMany({
       where: {
+        bitacoraCreacion: {
+          gte: twentyFourHoursAgo,
+        },
         NOT: {
           notificationLogs: {
             some: {

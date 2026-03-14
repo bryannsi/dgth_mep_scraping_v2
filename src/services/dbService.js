@@ -1,5 +1,5 @@
 import { CONFIG } from "../config/config.js";
-import { formatDate, parseDate } from "../helpers/helpers.js";
+import { smartFormatDate } from "../helpers/helpers.js";
 import { logger } from "../services/loggerService.js";
 import { prisma } from "./prismaClient.js";
 
@@ -57,8 +57,8 @@ export class DbService {
       especialidad: String(v.especialidad || "NO INDICADA"),
       institucion: String(v.institucion || "NO INDICADA"),
       lecciones: parseInt(v.lecciones || "0", 10) || 0,
-      rige: parseDate(v.rige) || new Date(),
-      vence: parseDate(v.vence) || new Date(),
+      rige: smartFormatDate(v.rige),
+      vence: smartFormatDate(v.vence),
     }));
 
     // 5. Inserción masiva (Bulk Insert). Gracias a `skipDuplicates` podemos
@@ -120,7 +120,7 @@ export class DbService {
    */
   static async isClientAuthorized(templateKey) {
     try {
-      const hoyCR = formatDate(null, "en-CA");
+      const hoyCR = smartFormatDate(null, "en-CA");
 
       const client = await prisma.client.findUnique({
         where: { templateKey },
@@ -140,9 +140,9 @@ export class DbService {
         return null;
       }
 
-      const venceCR = formatDate(client.expirationDate, "en-CA");
+      const venceCR = smartFormatDate(client.expirationDate, "en-CA");
 
-      if (venceCR < hoyCR) {
+      if (venceCR.toString() < hoyCR.toString()) {
         logger.warn(
           `📅 Suscripción de "${templateKey}" vencida el ${venceCR} (Hora CR).`,
         );
@@ -166,12 +166,12 @@ export class DbService {
   static async getAuthorizedClients() {
     try {
       //TODO: revisar si esta funcion se puede mezclar con la funcion formatDateCR de helpers.js, habria que pasar parametros para que sea funcional en ambos procesos
-      const hoyCR = formatDate(null, "en-CA");
+      const hoyCR = smartFormatDate(null, "en-CA");
 
       const where = {
         isActive: true,
         expirationDate: {
-          gte: new Date(hoyCR),
+          gte: hoyCR,
         },
       };
 

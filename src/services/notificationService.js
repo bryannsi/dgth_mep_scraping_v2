@@ -1,4 +1,4 @@
-﻿import { filterVacancies, formatDate } from "../helpers/helpers.js";
+import { filterVacancies } from "../helpers/helpers.js";
 import { DbService } from "./dbService.js";
 import { logger } from "./loggerService.js";
 import { sendEmail } from "./mailService.js";

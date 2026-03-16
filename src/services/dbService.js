@@ -217,4 +217,30 @@ export class DbService {
 
     return Array.from(regions);
   }
+
+  /**
+   * Extrae clases de puesto únicas de una lista de clientes.
+   * Si algún cliente busca en "todas", retorna un arreglo vacío [].
+   * @param {Array} clients - Lista de clientes de la base de datos.
+   * @returns {string[]} - Lista de clases de puesto en mayúsculas o [] para todas.
+   */
+  static extractClasePuestoFromClients(clients) {
+    const classes = new Set();
+
+    for (const client of clients) {
+      const configClasses = client.config?.clasePuesto;
+      // Si CUALQUIER cliente activo NO tiene clases definidas (search all),
+      // retornamos vacío para indicar que se debe procesar todo.
+      if (
+        !configClasses ||
+        !Array.isArray(configClasses) ||
+        configClasses.length === 0
+      ) {
+        return [];
+      }
+      configClasses.forEach((jc) => classes.add(jc.toUpperCase().trim()));
+    }
+
+    return Array.from(classes);
+  }
 }

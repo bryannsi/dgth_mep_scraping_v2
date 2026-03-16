@@ -38,11 +38,12 @@ export class NotificationService {
           return { tplName, success: false, reason: "no_pending_matches" };
         }
 
-        // 2. Aplicar filtros (keywords/regions) guardados en el JSON 'config' de la BD
+        // 2. Aplicar filtros (keywords/regions/clasePuesto) guardados en el JSON 'config' de la BD
         const filteredData = filterVacancies(
           pendingVacanciesDB,
           config.keywords || [],
           config.regions || [],
+          config.clasePuesto || [],
         );
 
         if (filteredData.length === 0) {

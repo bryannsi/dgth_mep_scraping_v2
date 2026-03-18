@@ -1,10 +1,10 @@
 name: MEP Scraping Cron Job
 on:
   schedule:
-    # Ejecuta cada 30 minutos desde las 7:00 a.m. hasta las 5:30 p.m.
+    # Cada 10 minutos desde 06:00 a.m. hasta 5:50 p.m. (hora Costa Rica, UTC-6)
     # Hora configurada en UTC.
-    # 13:00–23:30 UTC equivale a 7:00 a.m.hasta las 5:30 p.m. en Costa Rica (UTC-6)
-    - cron: "0,30 13-23 * * *"
+    # Equivale a 12:00–23:50 UTC
+    - cron: "*/10 12-23 * * *"
 
     # Ejecuta únicamente a las 00:00 UTC
     # 00:00 UTC equivale a las 6:00 p.m. hora Costa Rica

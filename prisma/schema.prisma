@@ -29,12 +29,12 @@ model Vacancy {
 
 model NotificationLog {
   id                Int      @id @default(autoincrement())
-  mepId             String?  @map("mep_id") @db.Text // Legacy field for views
   vacanteId         Int      @map("vacante_id")
+  mepId             String?  @map("mep_id") @db.Text // Legacy field for views
   template          String   @db.Text
   fechaNotificacion DateTime @default(now()) @map("fecha_notificacion") @db.Timestamptz
 
-  vacancy           Vacancy  @relation(fields: [vacanteId], references: [id], onDelete: Cascade, map: "log_notificaciones_vacante_fkey")
+  vacancy           Vacancy  @relation(fields: [vacanteId], references: [id], onDelete: Cascade)
 
   @@unique([vacanteId, template])
   @@map("log_notificaciones")

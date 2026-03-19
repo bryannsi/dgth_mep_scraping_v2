@@ -8,7 +8,7 @@ datasource db {
 
 model Vacancy {
   id               Int      @id @default(autoincrement())
-  mepId            String   @unique @map("mep_id") @db.Text
+  mepId            String   @map("mep_id") @db.Text
   vacante          String   @db.Text
   regional         String   @db.Text
   clasePuesto      String   @map("clase_puesto") @db.Text
@@ -21,6 +21,7 @@ model Vacancy {
 
   notificationLogs NotificationLog[]
 
+  @@unique([mepId, regional, clasePuesto, rige, lecciones])
   @@index([bitacoraCreacion], name: "idx_vacantes_bitacora_creacion")
   @@index([rige], name: "idx_vacantes_rige")
   @@map("vacantes")
@@ -28,13 +29,14 @@ model Vacancy {
 
 model NotificationLog {
   id                Int      @id @default(autoincrement())
-  mepId             String   @map("mep_id") @db.Text
+  mepId             String?  @map("mep_id") @db.Text // Legacy field for views
+  vacanteId         Int      @map("vacante_id")
   template          String   @db.Text
   fechaNotificacion DateTime @default(now()) @map("fecha_notificacion") @db.Timestamptz
 
-  vacancy           Vacancy  @relation(fields: [mepId], references: [mepId], onDelete: Cascade)
+  vacancy           Vacancy  @relation(fields: [vacanteId], references: [id], onDelete: Cascade, map: "log_notificaciones_vacante_fkey")
 
-  @@unique([mepId, template])
+  @@unique([vacanteId, template])
   @@map("log_notificaciones")
 }
 

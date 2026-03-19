@@ -22,24 +22,42 @@ export class DbService {
       return id && id !== "undefined" && id !== "null" ? [id] : [];
     });
 
-    // 2. Consultar en bloque qué registros ya existen en la DB, usando el campo
-    //    `mepId` (mapa simple con select para no traer datos de más).
+    // 2. Consultar registros que coincidan con la combinación única (llave compuesta).
+    //    Para simplificar, buscamos por mepId y luego filtramos en JS.
     const existingVacancies = await prisma.vacancy.findMany({
       where: { mepId: { in: mepIds } },
-      select: { mepId: true },
+      select: {
+        mepId: true,
+        regional: true,
+        clasePuesto: true,
+        rige: true,
+        lecciones: true,
+      },
     });
 
-    const existingIds = new Set(existingVacancies.map((v) => v.mepId));
+    const existingKeySet = new Set(
+      existingVacancies.map(
+        (v) =>
+          `${v.mepId}|${v.regional}|${v.clasePuesto}|${v.rige.toISOString().split("T")[0]}|${v.lecciones}`,
+      ),
+    );
+
     logger.info({
       totalVacancies: vacancies.length,
-      uniqueMepIds: mepIds.length,
-      existingInDB: existingIds.size,
+      potentialNew: mepIds.length,
+      existingInDB: existingVacancies.length,
     });
+
     // 3. Filtrar el conjunto original dejando únicamente las vacantes que NO
-    //    aparecen en la base de datos (nuevos candidatos a guardar).
+    //    coinciden plenamente con la llave compuesta en la base de datos.
     const newVacanciesToSave = vacancies.filter((v) => {
       const id = v.vacante ? String(v.vacante).trim() : null;
-      return id && id !== "undefined" && id !== "null" && !existingIds.has(id);
+      if (!id || id === "undefined" || id === "null") return false;
+
+      const rigeStr = v.rige ? smartFormatDate(v.rige).toISOString().split("T")[0] : "";
+      const key = `${id}|${String(v.regional || "NO INDICADA")}|${String(v.clasePuesto || "NO INDICADA")}|${rigeStr}|${parseInt(v.lecciones || "0", 10) || 0}`;
+
+      return !existingKeySet.has(key);
     });
 
     if (newVacanciesToSave.length === 0) {
@@ -68,10 +86,21 @@ export class DbService {
       skipDuplicates: true,
     });
 
-    logger.info(
-      `✅ Bulk Insert: Se guardaron ${result.count} vacantes nuevas.`,
-    );
-    return newVacanciesToSave;
+    // 6. Retornar las vacantes guardadas (con sus IDs de base de datos).
+    //    Esto es necesario para que el proceso de notificación pueda vincular los logs.
+    const savedVacancies = await prisma.vacancy.findMany({
+      where: {
+        OR: dataToInsert.map((v) => ({
+          mepId: v.mepId,
+          regional: v.regional,
+          clasePuesto: v.clasePuesto,
+          rige: v.rige,
+          lecciones: v.lecciones,
+        })),
+      },
+    });
+
+    return savedVacancies;
   }
 
   /**
@@ -110,6 +139,7 @@ export class DbService {
 
     return await prisma.notificationLog.createMany({
       data: vacancies.map((v) => ({
+        vacanteId: v.id,
         mepId: v.mepId,
         template: templateName,
       })),

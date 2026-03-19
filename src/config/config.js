@@ -27,10 +27,8 @@ export const CONFIG = {
     url: "https://apps.mep.go.cr/formulario",
   },
   mail: {
-    user: getEnv("MAIL_USERNAME"),
-    clientId: getEnv("OAUTH_CLIENTID"),
-    clientSecret: getEnv("OAUTH_CLIENT_SECRET"),
-    refreshToken: getEnv("OAUTH_REFRESH_TOKEN"),
+    apiKey: getEnv("RESEND_API_KEY"),
+    from: getEnv("MAIL_FROM"),
   },
   puppeteer: {
     headless: "new",

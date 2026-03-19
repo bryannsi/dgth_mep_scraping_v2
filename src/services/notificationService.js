@@ -66,9 +66,9 @@ export class NotificationService {
         );
 
         logger.info(`📧 Enviando correo para ${tplName}...`);
-        const result = await sendEmail(mailContent);
+        const { data, error } = await sendEmail(mailContent);
 
-        if (result.accepted && result.accepted.length > 0) {
+        if (data && data.id) {
           logger.info(`✅ Correo enviado a: ${client.email}`);
 
           // 4. Registrar notificaciones en bitácora
@@ -91,7 +91,7 @@ export class NotificationService {
         } else {
           await logger.error(
             `❌ Error al enviar correo para ${tplName}`,
-            result,
+            error,
           );
           return { tplName, success: false, reason: "send_error" };
         }

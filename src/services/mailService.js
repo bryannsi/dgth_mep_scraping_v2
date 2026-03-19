@@ -1,30 +1,45 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { CONFIG } from "../config/config.js";
+import { logger } from "./loggerService.js";
+
+let resendInstance = null;
+
+function getResendInstance() {
+  if (resendInstance) return resendInstance;
+
+  const apiKey = CONFIG.mail.apiKey;
+  if (!apiKey || apiKey.trim() === "") {
+    throw new Error(
+      "❌ RESEND_API_KEY no está definido en el archivo .env o no se pudo cargar.",
+    );
+  }
+
+  resendInstance = new Resend(apiKey);
+  return resendInstance;
+}
 
 export async function sendEmail(mailConfig) {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      type: "OAuth2",
-      user: CONFIG.mail.user,
-      clientId: CONFIG.mail.clientId,
-      clientSecret: CONFIG.mail.clientSecret,
-      refreshToken: CONFIG.mail.refreshToken,
-    },
-  });
+  try {
+    const resend = getResendInstance();
 
-  const options = {
-    from: CONFIG.mail.user,
-    to: mailConfig.to,
-    cc: mailConfig.cc,
-    bcc: mailConfig.bcc,
-    subject: mailConfig.subject,
-    html: mailConfig.html,
-    ...(Array.isArray(mailConfig.attachments) &&
-      mailConfig.attachments.length > 0 && {
-        attachments: mailConfig.attachments,
-      }),
-  };
+    const payload = {
+      from: CONFIG.mail.from,
+      to: mailConfig.to,
+      cc: mailConfig.cc,
+      bcc: mailConfig.bcc,
+      subject: mailConfig.subject,
+      html: mailConfig.html,
+      attachments: Array.isArray(mailConfig.attachments)
+        ? mailConfig.attachments.map((att) => ({
+            filename: att.filename,
+            path: att.path,
+          }))
+        : [],
+    };
 
-  return await transporter.sendMail(options);
+    return await resend.emails.send(payload);
+  } catch (error) {
+    logger.error("💥 Error en mailService:", error.message);
+    return { data: null, error };
+  }
 }

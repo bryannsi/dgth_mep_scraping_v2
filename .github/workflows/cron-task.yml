@@ -61,3 +61,5 @@ jobs:
           DB_PORT_POOLING: ${{ secrets.DB_PORT_POOLING }}
           DB_PORT_DIRECT: ${{ secrets.DB_PORT_DIRECT }}
           MODE_ENV: ${{ secrets.MODE_ENV }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}

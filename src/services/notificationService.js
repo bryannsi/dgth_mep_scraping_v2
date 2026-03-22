@@ -71,11 +71,11 @@ export class NotificationService {
         if (data && data.id) {
           logger.info(`✅ Correo enviado a: ${client.email}`);
 
-          // 4. Registrar notificaciones en bitácora
           try {
             const insertResult = await DbService.logNotifications(
               tplName,
-              filteredData, // Keeping filteredData as it's the expected argument for logNotifications
+              filteredData,
+              data.id, // Guardamos el ID de Resend
             );
             logger.info(
               `📝 Se registraron ${insertResult.count} filas en log_notificaciones para ${tplName}.`,

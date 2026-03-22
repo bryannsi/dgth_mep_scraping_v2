@@ -134,7 +134,7 @@ export class DbService {
    * @param {Array} vacancies - Lista de vacantes notificadas.
    * @returns {Promise<Object>} - Resultado de la operación createMany.
    */
-  static async logNotifications(templateName, vacancies) {
+  static async logNotifications(templateName, vacancies, resendId = null) {
     if (!vacancies?.length) return { count: 0 };
 
     return await prisma.notificationLog.createMany({
@@ -142,6 +142,7 @@ export class DbService {
         vacanteId: v.id,
         mepId: v.mepId,
         template: templateName,
+        resendId: resendId,
       })),
       skipDuplicates: true,
     });

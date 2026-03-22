@@ -32,6 +32,7 @@ model NotificationLog {
   vacanteId         Int      @map("vacante_id")
   mepId             String?  @map("mep_id") @db.Text // Legacy field for views
   template          String   @db.Text
+  resendId          String?  @map("resend_id") @db.Text
   fechaNotificacion DateTime @default(now()) @map("fecha_notificacion") @db.Timestamptz
 
   vacancy           Vacancy  @relation(fields: [vacanteId], references: [id], onDelete: Cascade)

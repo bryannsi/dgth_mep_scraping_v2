@@ -1,16 +1,16 @@
 name: MEP Scraping Cron Job
-on:
-  schedule:
-    # Cada 10 minutos desde 06:00 a.m. hasta 5:50 p.m. (hora Costa Rica, UTC-6)
-    # Hora configurada en UTC.
-    # Equivale a 12:00–23:50 UTC
-    - cron: "*/10 12-23 * * *"
 
-    # Ejecuta únicamente a las 00:00 UTC
-    # 00:00 UTC equivale a las 6:00 p.m. hora Costa Rica
-    # Se agrega aparte porque 18:00 CR corresponde a la hora 0 en UTC (día siguiente)
+on:
+  # 1. Este permite que Supabase despierte al Action por evento POST
+  repository_dispatch:
+    types: [trigger-from-supabase]
+
+  # 2. Tu configuración actual de horario (se mantiene como respaldo)
+  schedule:
+    - cron: "*/10 12-23 * * *"
     - cron: "0 0 * * *"
 
+  # 3. Permite ejecución manual desde la web de GitHub
   workflow_dispatch:
 
 jobs:
@@ -34,7 +34,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Instalar Navegador y Librerías (Chrome)
-        # Esta es la línea clave corregida
         run: |
           pnpm exec puppeteer browsers install chrome
           sudo npx puppeteer browsers install chrome --install-deps
@@ -49,7 +48,6 @@ jobs:
 
       - name: Ejecutar Scraping
         run: node build/index.js
-
         env:
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
           MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}

@@ -6,9 +6,9 @@ on:
     types: [trigger-from-supabase]
 
   # 2. Tu configuración actual de horario (se mantiene como respaldo)
-  schedule:
-    - cron: "*/10 12-23 * * *"
-    - cron: "0 0 * * *"
+ # schedule:
+   # - cron: "*/10 12-23 * * *"
+   # - cron: "0 0 * * *"
 
   # 3. Permite ejecución manual desde la web de GitHub
   workflow_dispatch:

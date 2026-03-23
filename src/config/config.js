@@ -33,10 +33,9 @@ export const CONFIG = {
   puppeteer: {
     headless: "new",
     executablePath:
-      process.env.PUPPETEER_EXECUTABLE_PATH ||
-      (process.platform === "win32"
+      process.platform === "win32"
         ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-        : undefined),
+        : undefined,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -45,7 +44,6 @@ export const CONFIG = {
       "--disable-gpu",
       "--no-first-run",
       "--no-zygote",
-      "--single-process",
     ],
   },
 };

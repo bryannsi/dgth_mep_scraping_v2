@@ -33,13 +33,22 @@ jobs:
       - name: Instalar dependencias de Node
         run: pnpm install --frozen-lockfile
 
-      - name: Ejecutar Build (Prisma + esbuild)
+      - name: Instalar Navegador y Librerías (Chrome)
+        run: |
+          pnpm exec puppeteer browsers install chrome
+          sudo npx puppeteer browsers install chrome --install-deps
+
+      - name: Ejecutar Build (esbuild)
         run: pnpm run build
+
+      - name: Generar Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL_DIRECT: "postgresql://postgres:${{ secrets.DB_PASSWORD_ESCAPED }}@${{ secrets.DB_PROJECT_ID }}.supabase.co:${{ secrets.DB_PORT_DIRECT }}/postgres"
 
       - name: Ejecutar Scraping
         run: node build/index.js
         env:
-          PUPPETEER_EXECUTABLE_PATH: "/usr/bin/google-chrome"
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
           MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
           OAUTH_CLIENTID: ${{ secrets.OAUTH_CLIENTID }}

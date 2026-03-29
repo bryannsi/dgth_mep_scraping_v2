@@ -2,7 +2,7 @@ import { defineConfig } from "prisma/config";
 import { PRISMA_CONFIG } from "./src/config/config.js";
 
 console.log(
-  "🔗 Usando URL para migración:",
+  "🔗 Cargando configuración de Prisma:",
   PRISMA_CONFIG.datasource.directUrl,
 );
 

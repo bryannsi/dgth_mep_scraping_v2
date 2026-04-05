@@ -34,6 +34,7 @@ function getResendInstance() {
  * @param {string} mailConfig.subject - Asunto del correo.
  * @param {string} mailConfig.html - Contenido HTML del correo.
  * @param {Array<{filename: string, path: string}>} [mailConfig.attachments] - Lista de archivos adjuntos.
+ * @param {Record<string, string>} [mailConfig.headers] - Cabeceras personalizadas adicionales para el correo.
  * @returns {Promise<{data: any, error: any}>} Un objeto con los datos de respuesta o el error capturado.
  */
 export async function sendEmail(mailConfig) {
@@ -53,6 +54,10 @@ export async function sendEmail(mailConfig) {
             path: att.path,
           }))
         : [],
+      headers: {
+        ...CONFIG.mail.headers,
+        ...mailConfig.headers,
+      },
     };
 
     return await resend.emails.send(payload);

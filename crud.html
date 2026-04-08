@@ -1,0 +1,2589 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Administración de Vacantes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    [data-theme="dark"] {
+      --bg: #111;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #eee;
+      --muted: #777;
+      --subtle: #2e2e2e;
+      --danger: #e05555;
+      --ok: #4caf7d;
+      --warn: #c9922a;
+      --input-bg: #222;
+      --card-bg: #1a1a1a;
+      --shadow: 0 1px 4px rgba(0, 0, 0, .5);
+      --disabled-bg: #1e1e1e;
+      --disabled-text: #555;
+    }
+
+    [data-theme="light"] {
+      --bg: #f4f4f4;
+      --surface: #fff;
+      --border: #e0e0e0;
+      --text: #111;
+      --muted: #888;
+      --subtle: #f0f0f0;
+      --danger: #c0392b;
+      --ok: #27ae60;
+      --warn: #b7770d;
+      --input-bg: #fafafa;
+      --card-bg: #fff;
+      --shadow: 0 1px 4px rgba(0, 0, 0, .08);
+      --disabled-bg: #f0f0f0;
+      --disabled-text: #aaa;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 15px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      transition: background .2s, color .2s;
+      overscroll-behavior: none;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -.3px;
+    }
+
+    .theme-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 7px 11px;
+      font-size: 15px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      min-width: 40px;
+      min-height: 40px;
+    }
+
+    .theme-btn:active {
+      opacity: .6;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      position: sticky;
+      top: 52px;
+      z-index: 99;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 13px 4px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      text-align: center;
+      transition: color .15s, border-color .15s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      min-height: 46px;
+    }
+
+    .tab.active {
+      color: var(--text);
+      border-bottom-color: var(--text);
+    }
+
+    /* ── PAGES ── */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .search-bar {
+      padding: 14px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .inner {
+      padding: 14px 16px 80px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ── INPUTS ── */
+    .inp {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 16px;
+      /* 16px prevents iOS zoom */
+      padding: 11px 13px;
+      outline: none;
+      transition: border-color .15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .inp:focus {
+      border-color: var(--text);
+    }
+
+    .inp::placeholder {
+      color: var(--muted);
+    }
+
+    .inp:disabled {
+      background: var(--disabled-bg);
+      color: var(--disabled-text);
+      cursor: not-allowed;
+      border-color: var(--border);
+    }
+
+    select.inp {
+      cursor: pointer;
+      background-image: none;
+    }
+
+    .label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 12px 18px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity .15s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      flex-shrink: 0;
+      min-height: 44px;
+    }
+
+    .btn:active {
+      opacity: .7;
+    }
+
+    .btn:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+
+    .btn-full {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+    }
+
+    .btn-ghost {
+      background: none;
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      padding: 9px 14px;
+      min-height: 40px;
+    }
+
+    .btn-ghost:active {
+      background: var(--subtle);
+    }
+
+    /* ── STATES ── */
+    .empty {
+      padding: 52px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .empty-icon {
+      font-size: 28px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .empty-title {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .spin-wrap {
+      padding: 48px 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .spinner {
+      width: 26px;
+      height: 26px;
+      border: 2px solid var(--border);
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin .65s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes up {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .alert {
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert-err {
+      border: 1px solid var(--danger);
+      color: var(--danger);
+    }
+
+    .alert-ok {
+      border: 1px solid var(--ok);
+      color: var(--ok);
+    }
+
+    /* ── CLIENT CARD ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 12px;
+      animation: up .2s ease;
+      box-shadow: var(--shadow);
+    }
+
+    .card-top {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ava {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .ava-sm {
+      width: 34px;
+      height: 34px;
+      font-size: 11px;
+    }
+
+    .cname {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .cemail {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ctags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ctag {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .ctag-ok {
+      color: var(--ok);
+      border-color: var(--ok);
+    }
+
+    .ctag-err {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .acc-btn {
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 13px 16px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      -webkit-tap-highlight-color: transparent;
+      border-bottom: 1px solid var(--border);
+      min-height: 46px;
+      touch-action: manipulation;
+    }
+
+    .acc-btn:active {
+      background: var(--subtle);
+    }
+
+    .acc-arrow {
+      color: var(--muted);
+      font-size: 11px;
+      transition: transform .2s;
+      flex-shrink: 0;
+    }
+
+    .acc-arrow.open {
+      transform: rotate(180deg);
+    }
+
+    .acc-body {
+      display: none;
+      padding: 6px 16px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .acc-body.open {
+      display: block;
+    }
+
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .kv:last-child {
+      border-bottom: none;
+    }
+
+    .kv-k {
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .kv-v {
+      text-align: right;
+      word-break: break-all;
+    }
+
+    .kv-v.ok {
+      color: var(--ok);
+    }
+
+    .kv-v.warn {
+      color: var(--warn);
+    }
+
+    .ef {
+      margin-bottom: 9px;
+    }
+
+    .ef-l {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .ef-v {
+      font-size: 14px;
+    }
+
+    .ef-v.dim {
+      color: var(--muted);
+    }
+
+    .kwtags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding-top: 2px;
+    }
+
+    .kwtag {
+      font-size: 12px;
+      padding: 4px 9px;
+      border-radius: 5px;
+      background: var(--subtle);
+      border: 1px solid var(--border);
+    }
+
+    .ts {
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .ts-r {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    pre.raw {
+      display: none;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: pre;
+      overflow-x: auto;
+      padding: 12px 16px;
+      line-height: 1.6;
+      border-top: 1px solid var(--border);
+      font-family: monospace;
+      background: var(--input-bg);
+    }
+
+    pre.raw.open {
+      display: block;
+    }
+
+    /* ── LIST ITEM ── */
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 13px 14px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      margin-bottom: 9px;
+      background: var(--card-bg);
+      animation: up .2s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .list-item:active {
+      background: var(--subtle);
+    }
+
+    .li-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .li-name {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .li-email {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    /* ── VACANTE CARDS ── */
+    .vac-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .vac-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow);
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+      animation: up .3s ease;
+      position: relative;
+    }
+
+    .vac-card:hover {
+      border-color: var(--muted);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .vac-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .vac-card-title {
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 1.4;
+      flex: 1;
+      color: var(--text);
+    }
+
+    .vac-card-mep {
+      background: var(--subtle);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .vac-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .vac-card-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .vac-card-icon {
+      font-size: 14px;
+      width: 20px;
+      text-align: center;
+      opacity: 0.8;
+    }
+
+    .vac-card-val {
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .vac-card-footer {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .vac-card-client-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .vac-card-client-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .vac-card-lecciones {
+      font-size: 11px;
+      background: var(--ok);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .vac-card-client-email {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .vac-card-times {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+      background: var(--subtle);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .li-tags {
+      display: flex;
+      gap: 4px;
+      margin-top: 5px;
+      flex-wrap: wrap;
+    }
+
+    .li-tag {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .li-tag.ok {
+      color: var(--ok);
+      border-color: var(--ok);
+    }
+
+    .li-tag.err {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .count-line {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── FORM ── */
+    .form-section {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      background: var(--card-bg);
+    }
+
+    /* Collapsible section header */
+    .form-sec-btn {
+      width: 100%;
+      background: var(--subtle);
+      border: none;
+      text-align: left;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      min-height: 44px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-sec-btn.open {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-sec-btn:active {
+      opacity: .7;
+    }
+
+    .fsec-arrow {
+      font-size: 11px;
+      transition: transform .2s;
+    }
+
+    .fsec-arrow.open {
+      transform: rotate(180deg);
+    }
+
+    /* Non-collapsible header */
+    .form-sec-title {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--subtle);
+    }
+
+    .form-inner {
+      padding: 14px;
+    }
+
+    .form-inner.collapsed {
+      display: none;
+    }
+
+    /* Toggle rows */
+    .trow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      min-height: 46px;
+    }
+
+    .trow:last-child {
+      border-bottom: none;
+    }
+
+    .trow-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .sw {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      flex-shrink: 0;
+    }
+
+    .sw input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .sw-track {
+      position: absolute;
+      inset: 0;
+      background: var(--subtle);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      transition: background .2s, border-color .2s;
+    }
+
+    .sw-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: left .2s, background .2s;
+    }
+
+    .sw input:checked~.sw-track {
+      background: var(--text);
+      border-color: var(--text);
+    }
+
+    .sw input:checked~.sw-thumb {
+      left: 23px;
+      background: var(--bg);
+    }
+
+    /* Keywords */
+    .kw-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .kw-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 24px;
+    }
+
+    .kw-chip {
+      font-size: 13px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      background: var(--subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .kw-rm {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0;
+      min-width: 24px;
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 7px;
+    }
+
+    /* ── REGIONS ── */
+    .regions-search-wrap {
+      position: relative;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .regions-search-inner {
+      position: relative;
+      flex: 1;
+    }
+
+    .regions-search-inner .inp {
+      padding-left: 36px;
+      width: 100%;
+    }
+
+    .regions-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .reg-clear-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 16px;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .reg-clear-btn:active {
+      opacity: .6;
+    }
+
+    .regions-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .regions-list {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow-y: auto;
+      max-height: 260px;
+      background: var(--input-bg);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .reg-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background .1s;
+    }
+
+    .reg-item:last-child {
+      border-bottom: none;
+    }
+
+    .reg-item:active {
+      background: var(--subtle);
+    }
+
+    .reg-item input[type=checkbox] {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      accent-color: var(--text);
+      cursor: pointer;
+    }
+
+    .reg-label {
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .reg-empty {
+      padding: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .reg-count {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 7px;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 11px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 999;
+      opacity: 0;
+      transition: transform .25s ease, opacity .25s;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+      max-width: 88vw;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.ok {
+      border-color: var(--ok);
+      color: var(--ok);
+    }
+
+    .toast.err {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    #qIdWrap,
+    #qEmailWrap,
+    #qNombreWrap {
+      display: none;
+    }
+
+    /* ── VACANTES TABLE ── */
+    .vac-table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card-bg);
+    }
+
+    .vac-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .vac-table th {
+      background: var(--subtle);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .vac-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      line-height: 1.4;
+    }
+
+    .vac-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .vac-table tr:active td {
+      background: var(--subtle);
+    }
+
+    .vac-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ── PAGINATION ── */
+    .pag-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 0 4px;
+      flex-wrap: wrap;
+    }
+
+    .pag-info {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pag-btns {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .pag-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 12px;
+      cursor: pointer;
+      min-height: 36px;
+      min-width: 36px;
+      -webkit-tap-highlight-color: transparent;
+      font-family: inherit;
+      transition: background .1s;
+    }
+
+    .pag-btn:disabled {
+      opacity: .3;
+      cursor: not-allowed;
+    }
+
+    .pag-btn.active {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+
+    .pag-btn:not(:disabled):active {
+      background: var(--subtle);
+    }
+
+    .vac-detail-row {
+      background: var(--input-bg);
+    }
+
+    .vac-detail-row td {
+      padding: 10px 14px;
+    }
+
+    /* safe area for phones with notch/home bar */
+    .inner {
+      padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <span class="logo">Administración de Vacantes</span>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('pgQuery',this)">Consultas</button>
+    <button class="tab" id="tabInsert" onclick="switchTab('pgInsert',this)">Clientes</button>
+    <button class="tab" id="tabVacantes" onclick="switchTab('pgVacantes',this)">Vacantes</button>
+  </div>
+
+  <!-- ══ TAB 1: CONSULTAS ══ -->
+  <div id="pgQuery" class="page active">
+    <div class="search-bar">
+      <select class="inp" id="qMode" onchange="onModeChange()">
+        <option value="all">Todos los clientes</option>
+        <option value="id">Buscar por ID</option>
+        <option value="email">Buscar por correo</option>
+        <option value="nombre">Buscar por nombre</option>
+      </select>
+      <div id="qIdWrap">
+        <input type="number" id="qId" class="inp" placeholder="ID del cliente" min="1" inputmode="numeric" />
+      </div>
+      <div id="qEmailWrap">
+        <input type="email" id="qEmail" class="inp" placeholder="correo@ejemplo.com" inputmode="email" />
+      </div>
+      <div id="qNombreWrap">
+        <input type="text" id="qNombre" class="inp" placeholder="Nombre del cliente" autocomplete="off" />
+      </div>
+      <button class="btn btn-full" id="qBtn" onclick="runQuery()">Ejecutar</button>
+    </div>
+    <div class="inner">
+      <div id="q_idle" class="empty">
+        <span class="empty-icon">↑</span>
+        <div class="empty-title">Sin resultados</div>
+        Elige una consulta y presiona Ejecutar
+      </div>
+      <div id="q_load" class="spin-wrap" style="display:none">
+        <div class="spinner"></div>
+      </div>
+      <div id="q_err" class="alert alert-err"></div>
+      <div id="q_empty" class="empty" style="display:none">
+        <span class="empty-icon">—</span>
+        <div class="empty-title">Sin resultados</div>
+        La consulta no devolvió clientes
+      </div>
+      <div id="q_res" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 2: INSERTAR/ACTUALIZAR ══ -->
+  <div id="pgInsert" class="page">
+    <div class="inner">
+
+      <!-- Edit mode banner -->
+      <div id="editBanner"
+        style="display:none; background:var(--subtle); border:1px solid var(--border); border-radius:9px; padding:11px 14px; margin-bottom:14px; display:none; align-items:center; justify-content:space-between; gap:10px;">
+        <span style="font-size:13px; color:var(--muted);">Editando cliente <strong id="editBannerName"
+            style="color:var(--text);"></strong></span>
+        <button class="btn-ghost btn" onclick="cancelEdit()"
+          style="font-size:12px; padding:6px 12px; min-height:36px;">✕ Cancelar</button>
+      </div>
+      <input type="hidden" id="f_edit_id" value="" />
+
+      <!-- Datos básicos -->
+      <div class="form-section">
+        <div class="form-sec-title">Datos básicos</div>
+        <div class="form-inner">
+          <div class="field">
+            <div class="row2">
+              <div><label class="label">Nombre *</label><input type="text" id="f_nombre" class="inp"
+                  placeholder="Nombre" autocomplete="given-name" /></div>
+              <div><label class="label">Apellido *</label><input type="text" id="f_apellido" class="inp"
+                  placeholder="Apellido" autocomplete="family-name" oninput="syncTemplate()" /></div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="label">Correo *</label>
+            <input type="email" id="f_email" class="inp" placeholder="correo@ejemplo.com" inputmode="email"
+              autocomplete="email" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado (collapsible, collapsed by default) -->
+      <div class="form-section">
+        <button class="form-sec-btn" id="estadoBtn" onclick="toggleFormSec('estadoBody','estadoBtn','estadoArrow')">
+          Estado
+          <span class="fsec-arrow" id="estadoArrow">▼</span>
+        </button>
+        <div class="form-inner collapsed" id="estadoBody">
+          <div class="trow"><span class="trow-label">Activo</span><label class="sw"><input type="checkbox" id="f_activo"
+                checked />
+              <div class="sw-track"></div>
+              <div class="sw-thumb"></div>
+            </label></div>
+          <div class="trow"><span class="trow-label">Pago verificado</span><label class="sw"><input type="checkbox"
+                id="f_pago" checked />
+              <div class="sw-track"></div>
+              <div class="sw-thumb"></div>
+            </label></div>
+          <div class="trow"><span class="trow-label">Es prueba</span><label class="sw"><input type="checkbox"
+                id="f_prueba" />
+              <div class="sw-track"></div>
+              <div class="sw-thumb"></div>
+            </label></div>
+        </div>
+      </div>
+
+      <!-- Email config -->
+      <div class="form-section">
+        <div class="form-sec-title">Email</div>
+        <div class="form-inner">
+          <div class="field">
+            <label class="label">Nombre de template</label>
+            <input type="text" id="f_template" class="inp" placeholder="Se completa con el correo" />
+          </div>
+          <div class="field"><label class="label">Asunto</label><input type="text" id="f_subject" class="inp"
+              placeholder="Reporte de Vacantes -" value="Reporte de Vacantes - " /></div>
+          <div class="field"><label class="label">CC</label><input type="email" id="f_cc" class="inp"
+              placeholder="cc@ejemplo.com" inputmode="email" /></div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="label">BCC</label>
+            <input type="email" id="f_bcc" class="inp" value="notificaciones.vacantes.mep@gmail.com" disabled />
+          </div>
+          <div class="trow" style="border-top:1px solid var(--border);margin-top:12px;padding-top:4px;">
+            <span class="trow-label">Enviar adjunto</span>
+            <label class="sw"><input type="checkbox" id="f_attach" />
+              <div class="sw-track"></div>
+              <div class="sw-thumb"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Keywords -->
+      <div class="form-section">
+        <div class="form-sec-title">Keywords</div>
+        <div class="form-inner">
+          <div class="kw-row">
+            <input type="text" id="kwInp" class="inp" placeholder="Ej: INFORMATICA" style="text-transform:uppercase"
+              onkeydown="if(event.key==='Enter'){addKw();event.preventDefault();}" />
+            <button class="btn" onclick="addKw()" style="padding:11px 16px; font-size:18px;">+</button>
+          </div>
+          <div class="kw-chips" id="kwChips"></div>
+          <p class="hint">Presiona Enter o + para agregar</p>
+        </div>
+      </div>
+
+      <!-- Clases de Puesto -->
+      <div class="form-section">
+        <div class="form-sec-title">Clases de Puesto</div>
+        <div class="form-inner">
+          <div class="kw-row">
+            <input type="text" id="jcInp" class="inp" placeholder="Ej: PROFESOR DE ENSEÑANZA MEDIA"
+              style="text-transform:uppercase" onkeydown="if(event.key==='Enter'){addJc();event.preventDefault();}" />
+            <button class="btn" onclick="addJc()" style="padding:11px 16px; font-size:18px;">+</button>
+          </div>
+          <div class="kw-chips" id="jcChips"></div>
+          <p class="hint">Presiona Enter o + para agregar</p>
+        </div>
+      </div>
+
+      <!-- Regionales -->
+      <div class="form-section">
+        <div class="form-sec-title">Regionales</div>
+        <div class="form-inner">
+          <div class="regions-search-wrap">
+            <div class="regions-search-inner">
+              <span class="regions-search-icon">⌕</span>
+              <input type="text" id="regSearch" class="inp" placeholder="Buscar regional..."
+                oninput="filterRegions()" />
+            </div>
+            <button class="reg-clear-btn" onclick="clearRegSearch()" title="Borrar búsqueda">✕</button>
+          </div>
+          <div class="regions-actions">
+            <button class="btn btn-ghost" onclick="selectAllRegions()">Seleccionar todo</button>
+            <button class="btn btn-ghost" onclick="clearRegions()">Limpiar</button>
+          </div>
+          <div class="regions-list" id="regionsGrid"></div>
+          <p class="reg-count" id="regSelCount">0 regionales seleccionadas</p>
+        </div>
+      </div>
+
+      <button class="btn btn-full" id="insBtn" onclick="submitForm()">Insertar cliente</button>
+      <div style="margin-top:12px;">
+        <div class="alert alert-ok" id="insOk"></div>
+        <div class="alert alert-err" id="insErr"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ TAB 3: VACANTES ══ -->
+  <div id="pgVacantes" class="page">
+    <div class="search-bar">
+
+      <!-- Tipo de búsqueda -->
+      <select class="inp" id="vMode" onchange="onVModeChange()">
+        <option value="all">Todas las vacantes</option>
+        <option value="mep_id">Número de Vacante</option>
+        <option value="regional">Regional</option>
+        <option value="clase_puesto">Clase de Puesto</option>
+        <option value="especialidad">Especialidad</option>
+        <option value="institucion">Institución</option>
+        <option value="fecha_creacion">Fecha de Creación (desde)</option>
+      </select>
+
+      <div id="vMepIdWrap" style="display:none">
+        <input type="text" id="vMepId" class="inp" placeholder="Número de vacante (mep_id)" autocomplete="off" />
+      </div>
+
+      <div id="vRegionalWrap" style="display:none">
+        <select class="inp" id="vRegional">
+          <option value="">— Seleccionar regional —</option>
+        </select>
+      </div>
+
+      <div id="vClasePuestoWrap" style="display:none">
+        <select class="inp" id="vClasePuesto">
+          <option value="">— Seleccionar clase de puesto —</option>
+        </select>
+      </div>
+
+      <div id="vEspecialidadWrap" style="display:none">
+        <select class="inp" id="vEspecialidad">
+          <option value="">— Seleccionar especialidad —</option>
+        </select>
+      </div>
+
+      <div id="vInstitucionWrap" style="display:none">
+        <input type="text" id="vInstitucion" class="inp" placeholder="Nombre de institución" autocomplete="off" />
+      </div>
+
+      <div id="vFechaWrap" style="display:none">
+        <input type="date" id="vFecha" class="inp" />
+      </div>
+
+      <button class="btn btn-full" id="vBtn" onclick="runVacantes(true)">Buscar vacantes</button>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-top:2px;">
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <span style="font-size:11px;color:var(--muted);white-space:nowrap;font-weight:500;">ACCESO RÁPIDO</span>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="btn btn-ghost" id="vHoyBtn" onclick="runVacantesRapido('hoy')">📋 Hoy</button>
+        <button class="btn btn-ghost" id="vNotifBtn" onclick="runVacantesRapido('notificadas')">🔔 Notificadas
+          hoy</button>
+      </div>
+    </div>
+
+    <div class="inner">
+      <div id="v_idle" class="empty">
+        <span class="empty-icon">⬆</span>
+        <div class="empty-title">Sin resultados</div>
+        Elige un filtro y presiona Buscar
+      </div>
+      <div id="v_load" class="spin-wrap" style="display:none">
+        <div class="spinner"></div>
+      </div>
+      <div id="v_err" class="alert alert-err"></div>
+      <div id="v_empty" class="empty" style="display:none">
+        <span class="empty-icon">—</span>
+        <div class="empty-title">Sin resultados</div>
+        La consulta no devolvió vacantes
+      </div>
+      <div id="v_res" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ─── CONFIG ──────────────────────────────
+    const SUPABASE_PROJECT_ID = 'sfiueqoeerbjrkmriabq';
+    const SUPABASE_BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co`;
+    const SUPABASE_API_KEY = 'sb_publishable_7v75cH0TTdHO79bqz-TcjQ_XgZB90qP';
+    const HEADERS = {
+      'apikey': SUPABASE_API_KEY,
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_API_KEY}`
+    };
+
+    const REGIONALES = [
+      "ADMINISTRACION CENTRAL",
+      "ADMINISTRACION DE LOS SERVICIOS",
+      "ADMINISTRACION DE RECURSOS HUMANOS",
+      "ADMINISTRACION REGIONAL DEL SIST. EDUC.",
+      "APOYO A LA EDUCACION INCLUSIVA",
+      "APOYO AL SISTEMA EDUATIVO",
+      "CAPACIT. Y ACTUAL. DEL PERSONAL DEL MEP",
+      "DEFINICION Y PLANIF. DE LA POL. EDUC.",
+      "DIREC. REGIONAL EDUCACION AGUIRRE",
+      "DIREC. REGIONAL EDUCACION ALAJUELA",
+      "DIREC. REGIONAL EDUCACION CAÑAS",
+      "DIREC. REGIONAL EDUCACION CARTAGO",
+      "DIREC. REGIONAL EDUCACION COTO",
+      "DIREC. REGIONAL EDUCACION DE SARAPIQUI",
+      "DIREC. REGIONAL EDUCACION DESAMAPARADOS",
+      "DIREC. REGIONAL EDUCACION GRANDE DE TERRABA",
+      "DIREC. REGIONAL EDUCACION GUAPILES",
+      "DIREC. REGIONAL EDUCACION HEREDIA",
+      "DIREC. REGIONAL EDUCACION LIBERIA",
+      "DIREC. REGIONAL EDUCACION LIMON",
+      "DIREC. REGIONAL EDUCACION LOS SANTOS",
+      "DIREC. REGIONAL EDUCACION NICOYA",
+      "DIREC. REGIONAL EDUCACION OCCIDENTE",
+      "DIREC. REGIONAL EDUCACION PENINSULAR",
+      "DIREC. REGIONAL EDUCACION PEREZ ZELEDON",
+      "DIREC. REGIONAL EDUCACION PUNTARENAS",
+      "DIREC. REGIONAL EDUCACION PURISCAL",
+      "DIREC. REGIONAL EDUCACION SAN CARLOS",
+      "DIREC. REGIONAL EDUCACION SAN JOSE - CENTRAL",
+      "DIREC. REGIONAL EDUCACION SAN JOSE - NORTE",
+      "DIREC. REGIONAL EDUCACION SAN JOSE - OESTE",
+      "DIREC. REGIONAL EDUCACION SANTA CRUZ",
+      "DIREC. REGIONAL EDUCACION SULÁ",
+      "DIREC. REGIONAL EDUCACION TURRIALBA",
+      "DIREC. REGIONAL EDUCACION ZONA NORTE-NORTE",
+      "EJECUCION PRESUPUESTARIA",
+      "EVALUACION DE LOS SERVICIOS",
+      "FUNDAMENTACION PARA TOMA DE DECISIONES",
+      "INFRAESTRUCTURA Y EQUIPAMIENTO",
+      "ORIENTACION DEL SISTEMA EDUCATIVO NAC.",
+      "SERVICIOS DE COOPER. Y DIVULGACION",
+      "TECNOLOGIA INFORMATICA EN EDUCACION",
+      "TECNOLOGIA INFORMATICA PARA LA GESTION",
+      "VINCULO AL TRABAJO"
+    ];
+    // ─────────────────────────────────────────
+
+    const $ = id => document.getElementById(id);
+    let keywords = [];
+    let jobClasses = [];
+    // Track selected regions independently of DOM (survives filter re-renders)
+    let selectedRegions = new Set();
+    // Store fetched client data for edit access
+    const clientDataMap = {};
+
+    // ── THEME ─────────────────────────────────
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      html.dataset.theme = next;
+      $('themeBtn').textContent = next === 'dark' ? '☀' : '☾';
+      try { localStorage.setItem('theme', next); } catch (e) { }
+    }
+
+    // ── TABS ──────────────────────────────────
+    function switchTab(id, btn) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      $(id).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // ── TOAST ─────────────────────────────────
+    function toast(msg, type = 'ok') {
+      const t = $('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type + ' show';
+      setTimeout(() => { t.className = 'toast'; }, 2600);
+    }
+
+    // ── HELPERS ───────────────────────────────
+    const initials = name =>
+      (name || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+    const CR_LOCALE = 'es-CR';
+    const CR_TZ = 'America/Costa_Rica';
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      try {
+        return new Date(iso).toLocaleDateString(CR_LOCALE, { year: 'numeric', month: 'short', day: 'numeric', timeZone: CR_TZ });
+      } catch (e) { return iso; }
+    }
+    function fmtDT(iso) {
+      if (!iso) return '—';
+      try {
+        return new Date(iso).toLocaleString(CR_LOCALE, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: CR_TZ });
+      } catch (e) { return iso; }
+    }
+    function fmtCR(crStr) {
+      if (!crStr) return '—';
+      try {
+        const d = new Date(crStr.trim().replace(' ', 'T'));
+        if (isNaN(d)) return crStr;
+        return d.toLocaleString(CR_LOCALE, {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', hour12: true
+        });
+      } catch (e) { return crStr; }
+    }
+    function addMonths(date, n) {
+      const d = new Date(date);
+      d.setMonth(d.getMonth() + n);
+      return d.toISOString().split('T')[0];
+    }
+
+    // ── FRIENDLY ERROR PARSER ─────────────────
+    const PG_CODES = {
+      '42P01': 'La tabla o función no existe en la base de datos.',
+      '42703': 'Una columna enviada no existe en la tabla.',
+      '23505': 'Ya existe un registro con ese valor (duplicado).',
+      '23502': 'Falta un campo obligatorio en los datos enviados.',
+      '23503': 'Referencia inválida: el registro relacionado no existe.',
+      '22P02': 'Tipo de dato incorrecto en uno de los campos.',
+      '28000': 'Credenciales inválidas. Verifica la API Key.',
+      '42501': 'Sin permisos para realizar esta operación.',
+      'PGRST116': 'No se encontró ningún registro con ese criterio.',
+      'PGRST301': 'Token de autenticación inválido o expirado.',
+    };
+
+    function friendlyError(err) {
+      const raw = err.message || String(err);
+      console.log(err)
+      // Network / fetch errors
+      if (raw.includes('Failed to fetch') || raw.includes('NetworkError') || raw.includes('net::')) {
+        return 'Sin conexión. Verifica tu red e intenta de nuevo.';
+      }
+      if (raw.includes('timeout') || raw.includes('AbortError')) {
+        return 'La solicitud tardó demasiado. Intenta de nuevo.';
+      }
+
+      // Try to parse Supabase JSON error body embedded in message
+      const jsonMatch = raw.match(/\{.*\}/s);
+      if (jsonMatch) {
+        try {
+          const body = JSON.parse(jsonMatch[0]);
+          const code = body.code || '';
+          const message = body.message || '';
+          const hint = body.hint || '';
+
+          if (PG_CODES[code]) {
+            return PG_CODES[code] + (hint ? ' ' + hint : '');
+          }
+
+          // HTTP status-based hints
+          if (raw.includes('HTTP 404')) return 'Recurso no encontrado (404). Verifica el endpoint o el nombre de la tabla/función.';
+          if (raw.includes('HTTP 401')) return 'No autorizado (401). Verifica la API Key.';
+          if (raw.includes('HTTP 403')) return 'Acceso denegado (403). Sin permisos para esta operación.';
+          if (raw.includes('HTTP 409')) return 'Conflicto (409). Ya existe un registro con esos datos.';
+          if (raw.includes('HTTP 422')) return 'Datos inválidos (422). ' + (message || 'Verifica los campos enviados.');
+          if (raw.includes('HTTP 500')) return 'Error interno del servidor (500). ' + (message || 'Intenta de nuevo más tarde.');
+
+          if (message) return message + (hint ? ' — ' + hint : '');
+        } catch (e) { /* fall through */ }
+      }
+
+      // Status-only messages without JSON
+      if (raw.includes('HTTP 404')) return 'Recurso no encontrado (404). Verifica el endpoint o el nombre de la función.';
+      if (raw.includes('HTTP 401')) return 'No autorizado (401). Verifica la API Key.';
+      if (raw.includes('HTTP 403')) return 'Acceso denegado (403). Sin permisos.';
+      if (raw.includes('HTTP 500')) return 'Error interno del servidor (500). Intenta de nuevo más tarde.';
+
+      return 'Ocurrió un error inesperado. Intenta de nuevo.';
+    }
+
+    // ── FORM SECTION COLLAPSE ─────────────────
+    function toggleFormSec(bodyId, btnId, arrowId) {
+      const body = $(bodyId);
+      const arrow = $(arrowId);
+      const isOpen = !body.classList.contains('collapsed');
+      body.classList.toggle('collapsed', isOpen);
+      arrow.classList.toggle('open', !isOpen);
+    }
+
+    // ── CARD ACCORDION ────────────────────────
+    function toggleAcc(bodyId, arrowId) {
+      const b = $(bodyId), a = $(arrowId);
+      b.classList.toggle('open');
+      a.classList.toggle('open', b.classList.contains('open'));
+    }
+    function toggleRaw(preId, btnId) {
+      const p = $(preId), b = $(btnId);
+      p.classList.toggle('open');
+      b.textContent = p.classList.contains('open') ? 'Ocultar JSON ▲' : 'Ver JSON ▼';
+    }
+
+    // ── TEMPLATE FROM EMAIL ───────────────────
+    function syncTemplate() {
+      const tpl = $('f_nombre').value.trim() + '-' + $('f_apellido').value.trim();
+      $('f_template').value = tpl;
+    }
+
+    // ── BUILD CLIENT CARD ─────────────────────
+    function buildCard(c, cid, uid) {
+      const cfg = c.configuracion || {};
+      const kws = cfg.keywords || [];
+      const jcs = cfg.clasePuesto || [];
+      const cfgRegions = cfg.regions || [];
+      const regions = c.regions && c.regions.length ? c.regions : cfgRegions;
+      const vencida = c.fecha_vencimiento ? new Date(c.fecha_vencimiento) < new Date() : false;
+
+      $(cid).innerHTML =
+        // Close/back button
+        '<div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">' +
+        '<button class="card-close-btn btn-ghost btn" style="font-size:13px;padding:7px 12px;min-height:36px;">‹ Volver</button>' +
+        '<span style="font-size:14px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (c.nombre || '—') + '</span>' +
+        '<span style="font-size:12px;color:var(--muted);">#' + c.id + '</span>' +
+        '</div>' +
+        (c.esta_activo ? '<span class="ctag ctag-ok">Activo</span>' : '<span class="ctag ctag-err">Inactivo</span>') +
+        (c.pago_verificado ? '<span class="ctag ctag-ok">Pago ✓</span>' : '<span class="ctag">Pago pendiente</span>') +
+        (c.es_prueba ? '<span class="ctag">Prueba</span>' : '') +
+        '<span class="ctag">' + (c.template_key || '—') + '</span>' +
+        '</div>' +
+
+        // Info
+        '<button class="acc-btn" onclick="toggleAcc(\'ab_i' + uid + '\',\'ar_i' + uid + '\')">' +
+        'Información <span class="acc-arrow open" id="ar_i' + uid + '">▼</span>' +
+        '</button>' +
+        '<div class="acc-body open" id="ab_i' + uid + '">' +
+        '<div class="kv"><span class="kv-k">ID</span><span class="kv-v">#' + c.id + '</span></div>' +
+        '<div class="kv"><span class="kv-k">Template</span><span class="kv-v">' + (c.template_key || '—') + '</span></div>' +
+        '<div class="kv"><span class="kv-k">Vencimiento</span><span class="kv-v ' + (vencida ? 'warn' : '') + '">' + fmtDate(c.fecha_vencimiento) + (vencida ? ' ⚠' : '') + '</span></div>' +
+        '<div class="kv"><span class="kv-k">Activo</span><span class="kv-v ' + (c.esta_activo ? 'ok' : '') + '">' + (c.esta_activo ? 'Sí' : 'No') + '</span></div>' +
+        '<div class="kv"><span class="kv-k">Pago</span><span class="kv-v ' + (c.pago_verificado ? 'ok' : '') + '">' + (c.pago_verificado ? 'Verificado' : 'Pendiente') + '</span></div>' +
+        '<div class="kv"><span class="kv-k">Prueba</span><span class="kv-v">' + (c.es_prueba ? 'Sí' : 'No') + '</span></div>' +
+        '</div>' +
+
+        // Email
+        '<button class="acc-btn" onclick="toggleAcc(\'ab_e' + uid + '\',\'ar_e' + uid + '\')">' +
+        'Email <span class="acc-arrow" id="ar_e' + uid + '">▼</span>' +
+        '</button>' +
+        '<div class="acc-body" id="ab_e' + uid + '">' +
+        '<div class="ef"><div class="ef-l">Asunto</div><div class="ef-v ' + (cfg.subject ? '' : 'dim') + '">' + (cfg.subject || 'Sin asunto') + '</div></div>' +
+        '<div class="ef"><div class="ef-l">CC</div><div class="ef-v ' + (cfg.cc ? '' : 'dim') + '">' + (cfg.cc || '—') + '</div></div>' +
+        '<div class="ef"><div class="ef-l">BCC</div><div class="ef-v ' + (cfg.bcc ? '' : 'dim') + '">' + (cfg.bcc || '—') + '</div></div>' +
+        '<div class="ef" style="margin-bottom:0;"><div class="ef-l">Adjunto</div><div class="ef-v">' + (cfg.sendAttachment ? 'Sí' : 'No') + '</div></div>' +
+        '</div>' +
+
+        // Keywords
+        '<button class="acc-btn" onclick="toggleAcc(\'ab_k' + uid + '\',\'ar_k' + uid + '\')">' +
+        'Keywords <span style="color:var(--muted);font-size:12px;">(' + kws.length + ')</span>' +
+        '<span class="acc-arrow" id="ar_k' + uid + '">▼</span>' +
+        '</button>' +
+        '<div class="acc-body" id="ab_k' + uid + '">' +
+        '<div class="kwtags">' +
+        (kws.length ? kws.map(k => '<span class="kwtag">' + k + '</span>').join('') : '<span style="font-size:13px;color:var(--muted)">Sin keywords</span>') +
+        '</div>' +
+        '</div>' +
+
+        // Clase Puesto
+        '<button class="acc-btn" onclick="toggleAcc(\'ab_jc' + uid + '\',\'ar_jc' + uid + '\')">' +
+        'Clases de Puesto <span style="color:var(--muted);font-size:12px;">(' + jcs.length + ')</span>' +
+        '<span class="acc-arrow" id="ar_jc' + uid + '">▼</span>' +
+        '</button>' +
+        '<div class="acc-body" id="ab_jc' + uid + '">' +
+        '<div class="kwtags">' +
+        (jcs.length ? jcs.map(j => '<span class="kwtag">' + j + '</span>').join('') : '<span style="font-size:13px;color:var(--muted)">Sin clases de puesto</span>') +
+        '</div>' +
+        '</div>' +
+
+        // Regionales (always show section, empty state if none)
+        '<button class="acc-btn" onclick="toggleAcc(\'ab_r' + uid + '\',\'ar_r' + uid + '\')">' +
+        'Regionales <span style="color:var(--muted);font-size:12px;">(' + regions.length + ')</span>' +
+        '<span class="acc-arrow" id="ar_r' + uid + '">▼</span>' +
+        '</button>' +
+        '<div class="acc-body" id="ab_r' + uid + '">' +
+        (regions.length
+          ? '<div class="kwtags">' + regions.map(r => '<span class="kwtag">' + r + '</span>').join('') + '</div>'
+          : '<span style="font-size:13px;color:var(--muted)">Sin regionales asignadas</span>') +
+        '</div>' +
+
+        // Timestamps
+        '<div class="ts">' +
+        '<div class="ts-r"><span>Creado</span><span>' + fmtDT(c.fecha_creacion) + '</span></div>' +
+        '<div class="ts-r"><span>Actualizado</span><span>' + fmtDT(c.fecha_actualizacion) + '</span></div>' +
+        '</div>' +
+
+        // Actions
+        '<div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;">' +
+        '<button class="btn edit-btn" data-uid="' + uid + '" style="flex:1;font-size:13px;padding:10px;">✏ Modificar</button>' +
+        '<button class="btn-ghost btn" id="rb' + uid + '" onclick="toggleRaw(\'rp' + uid + '\',\'rb' + uid + '\')" style="flex:1;font-size:12px;padding:10px;">Ver JSON ▼</button>' +
+        '</div>' +
+        '<pre class="raw" id="rp' + uid + '">' + JSON.stringify(c, null, 2) + '</pre>';
+    }
+
+    // ── SHOW STATES ───────────────────────────
+    function ssq(s) {
+      ['q_idle', 'q_load', 'q_err', 'q_empty', 'q_res'].forEach(x => {
+        const el = $(x); if (!el) return;
+        el.style.display = 'none'; el.classList.remove('show');
+      });
+      const t = $(s);
+      if (s === 'q_err') t.classList.add('show');
+      else t.style.display = 'block';
+    }
+
+    // ── CONSULTAS ─────────────────────────────
+    function onModeChange() {
+      const mode = $('qMode').value;
+      $('qIdWrap').style.display = mode === 'id' ? 'block' : 'none';
+      $('qEmailWrap').style.display = mode === 'email' ? 'block' : 'none';
+      $('qNombreWrap').style.display = mode === 'nombre' ? 'block' : 'none';
+    }
+
+    async function runQuery() {
+      const mode = $('qMode').value;
+      let url = SUPABASE_BASE_URL + '/rest/v1/clientes';
+
+      if (mode === 'id') {
+        const v = $('qId').value.trim();
+        if (!v || isNaN(v) || parseInt(v) < 1) { toast('Ingresa un ID válido', 'err'); return; }
+        url += '?id=eq.' + parseInt(v);
+      } else if (mode === 'email') {
+        const em = $('qEmail').value.trim();
+        if (!em) { toast('Ingresa un correo', 'err'); return; }
+        url += '?email=eq.' + encodeURIComponent(em);
+      } else if (mode === 'nombre') {
+        const nm = $('qNombre').value.trim();
+        if (!nm) { toast('Ingresa un nombre', 'err'); return; }
+        url += '?nombre=ilike.' + encodeURIComponent('%' + nm + '%');
+      }
+
+      ssq('q_load');
+      $('qBtn').disabled = true;
+
+      try {
+        const r = await fetch(url, { headers: HEADERS });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if (!d.length) { ssq('q_empty'); return; }
+
+        const cont = $('q_res');
+        cont.innerHTML = '<p class="count-line">' + d.length + ' cliente' + (d.length !== 1 ? 's' : '') + '</p>';
+
+        d.forEach((c, i) => {
+          const uid = 'q' + i;
+          clientDataMap[uid] = c; // store for edit access
+
+          const item = document.createElement('div');
+          item.className = 'list-item';
+          item.innerHTML =
+            '<div class="ava ava-sm">' + initials(c.nombre) + '</div>' +
+            '<div class="li-info">' +
+            '<div class="li-name">' + (c.nombre || '—') + '</div>' +
+            '<div class="li-email">' + (c.email || '—') + '</div>' +
+            '<div class="li-tags">' +
+            '<span class="li-tag ' + (c.esta_activo ? 'ok' : 'err') + '">' + (c.esta_activo ? 'Activo' : 'Inactivo') + '</span>' +
+            (c.pago_verificado ? '<span class="li-tag ok">Pago ✓</span>' : '') +
+            '</div>' +
+            '</div>' +
+            '<span class="li-chevron" style="color:var(--muted);font-size:18px;transition:transform .2s;">›</span>';
+
+          const exp = document.createElement('div');
+          exp.id = uid;
+          exp.className = 'card';
+          exp.style.cssText = 'display:none;margin-bottom:10px;';
+          let built = false;
+
+          item.onclick = () => {
+            const open = exp.style.display === 'block';
+            if (open) {
+              exp.style.display = 'none';
+              item.style.display = 'flex';
+              item.querySelector('.li-chevron').style.transform = 'rotate(0deg)';
+            } else {
+              item.style.display = 'none'; // hide row — card shows full info
+              exp.style.display = 'block';
+              if (!built) { buildCard(c, uid, uid); built = true; }
+            }
+          };
+
+          // Close button inside card to go back to list view
+          exp.addEventListener('click', e => {
+            if (e.target.closest('.card-close-btn')) {
+              exp.style.display = 'none';
+              item.style.display = 'flex';
+            }
+          });
+
+          cont.appendChild(item);
+          cont.appendChild(exp);
+        });
+
+        ssq('q_res');
+
+        // Event delegation for edit buttons (avoids inline JSON issues)
+        $('q_res').addEventListener('click', e => {
+          const btn = e.target.closest('.edit-btn');
+          if (btn) {
+            const uid = btn.dataset.uid;
+            if (clientDataMap[uid]) loadForEdit(clientDataMap[uid]);
+          }
+        }, { once: false });
+      } catch (e) {
+        $('q_err').textContent = friendlyError(e);
+        ssq('q_err');
+      } finally {
+        $('qBtn').disabled = false;
+      }
+    }
+
+    // ── KEYWORDS ──────────────────────────────
+    function renderKw() {
+      $('kwChips').innerHTML = keywords.map((k, i) =>
+        '<span class="kw-chip">' + k +
+        '<button class="kw-rm" onclick="rmKw(' + i + ')">×</button></span>'
+      ).join('');
+    }
+    function addKw() {
+      const v = $('kwInp').value.trim().toUpperCase();
+      if (v && !keywords.includes(v)) { keywords.push(v); renderKw(); }
+      $('kwInp').value = '';
+    }
+    function rmKw(i) { keywords.splice(i, 1); renderKw(); }
+
+    // ── JOB CLASSES ──────────────────────────
+    function renderJc() {
+      $('jcChips').innerHTML = jobClasses.map((j, i) =>
+        '<span class="kw-chip">' + j +
+        '<button class="kw-rm" onclick="rmJc(' + i + ')">×</button></span>'
+      ).join('');
+    }
+    function addJc() {
+      const v = $('jcInp').value.trim().toUpperCase();
+      if (v && !jobClasses.includes(v)) { jobClasses.push(v); renderJc(); }
+      $('jcInp').value = '';
+    }
+    function rmJc(i) { jobClasses.splice(i, 1); renderJc(); }
+
+    // ── REGIONS ───────────────────────────────
+    function renderRegions(filter) {
+      const q = (filter || '').toLowerCase().trim();
+      const grid = $('regionsGrid');
+      const visible = REGIONALES.filter(r => !q || r.toLowerCase().includes(q));
+
+      if (!visible.length) {
+        grid.innerHTML = '<div class="reg-empty">Sin resultados</div>';
+        return;
+      }
+
+      grid.innerHTML = visible.map(r => {
+        const checked = selectedRegions.has(r) ? 'checked' : '';
+        const id = 'reg_' + r.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+        return '<label class="reg-item">' +
+          '<input type="checkbox" id="' + id + '" value="' + r + '" ' + checked + ' onchange="toggleRegion(this)" />' +
+          '<span class="reg-label">' + r + '</span>' +
+          '</label>';
+      }).join('');
+    }
+
+    function toggleRegion(checkbox) {
+      if (checkbox.checked) selectedRegions.add(checkbox.value);
+      else selectedRegions.delete(checkbox.value);
+      updateRegCount();
+    }
+
+    function updateRegCount() {
+      const n = selectedRegions.size;
+      $('regSelCount').textContent = n + ' regional' + (n !== 1 ? 'es' : '') + ' seleccionada' + (n !== 1 ? 's' : '');
+    }
+
+    function filterRegions() {
+      renderRegions($('regSearch').value);
+    }
+
+    function clearRegSearch() {
+      $('regSearch').value = '';
+      renderRegions();
+      $('regSearch').focus();
+    }
+
+    function selectAllRegions() {
+      const q = ($('regSearch').value || '').toLowerCase().trim();
+      REGIONALES.filter(r => !q || r.toLowerCase().includes(q)).forEach(r => selectedRegions.add(r));
+      renderRegions($('regSearch').value);
+      updateRegCount();
+    }
+
+    function clearRegions() {
+      const q = ($('regSearch').value || '').toLowerCase().trim();
+      if (q) {
+        REGIONALES.filter(r => r.toLowerCase().includes(q)).forEach(r => selectedRegions.delete(r));
+      } else {
+        selectedRegions.clear();
+      }
+      renderRegions($('regSearch').value);
+      updateRegCount();
+    }
+
+    // ── EDIT MODE ─────────────────────────────
+    let editMode = false;
+
+    function loadForEdit(c) {
+      editMode = true;
+      $('f_edit_id').value = c.id;
+
+      // Split nombre into nombre + apellido (first word vs rest)
+      const parts = (c.nombre || '').split(' ');
+      $('f_nombre').value = parts[0] || '';
+      $('f_apellido').value = parts.slice(1).join(' ') || '';
+      $('f_email').value = c.email || '';
+      $('f_template').value = c.template_key || '';
+
+      const cfg = c.configuracion || {};
+      $('f_subject').value = cfg.subject || '';
+      $('f_cc').value = cfg.cc || '';
+      $('f_activo').checked = !!c.esta_activo;
+      $('f_pago').checked = !!c.pago_verificado;
+      $('f_prueba').checked = !!c.es_prueba;
+      $('f_attach').checked = !!cfg.sendAttachment;
+
+      keywords = Array.isArray(cfg.keywords) ? [...cfg.keywords] : [];
+      renderKw();
+
+      jobClasses = Array.isArray(cfg.clasePuesto) ? [...cfg.clasePuesto] : [];
+      renderJc();
+
+      const cfgRegions = cfg.regions || [];
+      const clientRegions = c.regions && c.regions.length ? c.regions : cfgRegions;
+      selectedRegions = new Set(clientRegions);
+      $('regSearch').value = '';
+      renderRegions();
+      updateRegCount();
+
+      // Update UI
+      $('insBtn').textContent = 'Actualizar cliente';
+      $('tabInsert').textContent = 'Actualizar';
+      $('editBanner').style.display = 'flex';
+      $('editBannerName').textContent = c.nombre || '';
+      $('insOk').classList.remove('show');
+      $('insErr').classList.remove('show');
+
+      // Switch to form tab
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      $('pgInsert').classList.add('active');
+      $('tabInsert').classList.add('active');
+
+      // Scroll to top of form
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      editMode = false;
+      $('f_edit_id').value = '';
+      $('insBtn').textContent = 'Insertar cliente';
+      $('tabInsert').textContent = 'Clientes';
+      $('editBanner').style.display = 'none';
+      resetForm();
+    }
+
+    function submitForm() {
+      if (editMode) {
+        updateClient();
+      } else {
+        insertClient();
+      }
+    }
+
+    async function updateClient() {
+      $('insOk').classList.remove('show');
+      $('insErr').classList.remove('show');
+
+      const id = parseInt($('f_edit_id').value);
+      const nombre = $('f_nombre').value.trim();
+      const apellido = $('f_apellido').value.trim();
+      const email = $('f_email').value.trim();
+
+      if (!nombre || !apellido || !email) {
+        $('insErr').textContent = 'Nombre, apellido y correo son obligatorios.';
+        $('insErr').classList.add('show');
+        return;
+      }
+
+      const nombreCompleto = nombre + ' ' + apellido;
+      const templateKey = $('f_nombre').value.trim() + '-' + $('f_apellido').value.trim();
+      const now = new Date().toISOString();
+
+      const payload = {
+        nombre: nombreCompleto,
+        email,
+        template_key: templateKey,
+        esta_activo: $('f_activo').checked,
+        pago_verificado: $('f_pago').checked,
+        es_prueba: $('f_prueba').checked,
+        // fecha_actualizacion borrada (la maneja la DB)
+        // fecha_vencimiento: '2024-12-31', // Puedes enviarla si tienes un input para ello
+        regions: Array.from(selectedRegions),
+        configuracion: {
+          cc: $('f_cc').value.trim(),
+          bcc: 'notificaciones.vacantes.mep@gmail.com',
+          subject: $('f_subject').value.trim(),
+          keywords: [...keywords],
+          clasePuesto: [...jobClasses],
+          regions: Array.from(selectedRegions),
+          sendAttachment: $('f_attach').checked
+        }
+      };
+
+      $('insBtn').disabled = true;
+      $('insBtn').textContent = 'Actualizando...';
+
+      try {
+        const r = await fetch(SUPABASE_BASE_URL + '/rest/v1/rpc/actualizar_cliente', {
+          method: 'POST',
+          headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json' }),
+          body: JSON.stringify({
+            target_id: id,
+            p_payload: payload
+          })
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + await r.text());
+        const d = await r.json();
+        // Misma lógica que usas en crear_cliente para extraer el ID
+        const updatedId = d && d.id ? d.id : (Array.isArray(d) && d[0] ? d[0].id : '—');
+        $('insOk').textContent = 'Cliente "' + nombreCompleto + '" (ID #' + updatedId + ') actualizado correctamente.';
+        $('insOk').classList.add('show');
+        toast('Actualizado ID #' + updatedId);
+        cancelEdit();
+      } catch (e) {
+        $('insErr').textContent = friendlyError(e);
+        $('insErr').classList.add('show');
+        toast('Error al actualizar', 'err');
+      } finally {
+        $('insBtn').disabled = false;
+        $('insBtn').textContent = 'Actualizar cliente';
+      }
+    }
+    async function insertClient() {
+      $('insOk').classList.remove('show');
+      $('insErr').classList.remove('show');
+
+      const nombre = $('f_nombre').value.trim();
+      const apellido = $('f_apellido').value.trim();
+      const email = $('f_email').value.trim();
+
+      if (!nombre || !apellido || !email) {
+        $('insErr').textContent = 'Nombre, apellido y correo son obligatorios.';
+        $('insErr').classList.add('show');
+        return;
+      }
+
+      const nombreCompleto = nombre + ' ' + apellido;
+      const templateKey = $('f_nombre').value.trim() + '-' + $('f_apellido').value.trim();
+      const now = new Date();
+      const fechaVenc = addMonths(now, 2);
+
+      const payload = {
+        p_template_key: templateKey,
+        p_email: email,
+        p_nombre: nombreCompleto,
+        p_esta_activo: $('f_activo').checked,
+        p_pago_verificado: $('f_pago').checked,
+        p_es_prueba: $('f_prueba').checked,
+        p_fecha_vencimiento: fechaVenc,
+        p_configuracion: {
+          cc: $('f_cc').value.trim(),
+          bcc: 'notificaciones.vacantes.mep@gmail.com',
+          subject: $('f_subject').value.trim(),
+          keywords: [...keywords],
+          clasePuesto: [...jobClasses],
+          regions: Array.from(selectedRegions),
+          sendAttachment: $('f_attach').checked
+        }
+      };
+
+      $('insBtn').disabled = true;
+      $('insBtn').textContent = 'Insertando...';
+
+      try {
+        const r = await fetch(SUPABASE_BASE_URL + '/rest/v1/rpc/crear_cliente', {
+          method: 'POST',
+          headers: HEADERS,
+          body: JSON.stringify(payload)
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + await r.text());
+        const d = await r.json();
+        const newId = d && d.id ? d.id : (Array.isArray(d) && d[0] ? d[0].id : '—');
+        $('insOk').textContent = 'Cliente "' + nombreCompleto + '" creado con ID #' + newId;
+        $('insOk').classList.add('show');
+        toast('Creado ID #' + newId);
+        resetForm();
+      } catch (e) {
+        $('insErr').textContent = friendlyError(e);
+        $('insErr').classList.add('show');
+        toast('Error al insertar', 'err');
+      } finally {
+        $('insBtn').disabled = false;
+        $('insBtn').textContent = 'Insertar cliente';
+      }
+    }
+
+    function resetForm() {
+      ['f_nombre', 'f_apellido', 'f_email', 'f_cc', 'f_template'].forEach(id => {
+        const el = $(id); if (el) el.value = '';
+      });
+      $('f_subject').value = 'Reporte de Vacantes - ';
+      $('f_activo').checked = true;
+      $('f_pago').checked = true;
+      $('f_prueba').checked = false;
+      $('f_attach').checked = false;
+      keywords = []; renderKw();
+      jobClasses = []; renderJc();
+      selectedRegions.clear();
+      $('regSearch').value = '';
+      renderRegions();
+      updateRegCount();
+    }
+
+    // ── VACANTES ──────────────────────────────
+
+    const CLASES_PUESTO = ["Asesor Nacional (G. De E.)", "Asesor Regional (G. De E.)", "Asistente De Dirección Centro Educativo 1", "Asistente De Dirección Centro Educativo 2", "Asistente De Dirección Escolar", "Asistente De Servicios De Educacion Especial", "Auxiliar Administrativo", "Auxiliar De Vigilancia De Centro Educativo", "Bibliotecólogo De Centro Educativo 1", "Cocinero", "Conserje  De Centro Educativo", "Director De Colegio 1", "Director De Colegio 3", "Director De Colegio Técnico Y Profesional 1", "Director De Enseñanza General Básica 1 ( I Y Ii Ciclos)", "Director De Enseñanza General Básica 2 ( I Y Ii Ciclos)", "Director De Enseñanza General Básica 3 ( I Y Ii Ciclos)", "Director De Enseñanza General Básica 4 ( I Y Ii Ciclos)", "Director De Enseñanza General Básica 5 ( I Y Ii Ciclos)", "Misceláneo De Servicio Civil 1 (G. De E.)", "Oficial De Seguridad De Servicio Civil 1", "Oficinista De Servicio Civil 1 (G. De E.)", "Oficinista De Servicio Civil 2 (G. De E.)", "Orientador 1", "Orientador 2", "Orientador 3", "Orientador Asistente", "Profesional De Servicio Civil 1 B (G.De E.)", "Profesional De Servicio Civil 2 (G.De E.)", "Profesional De Servicio Civil 3 (G.De E.)", "Profesional En Informática 2 (G.De E.)", "Profesional Jefe De Servicio Civil 1 ( G.De E.)", "Profesional Jefe De Servicio Civil 2 ( G.De E.)", "Profesor De Enseñanza Especial (G.De E.)", "Profesor De Enseñanza General Básica 1 ( I Y Ii Ciclos) ( G. De E.)", "Profesor De Enseñanza Media (G. De E.)", "Profesor De Enseñanza Media Bilingüe (G. De E.)", "Profesor De Enseñanza Preescolar (G.De E)", "Profesor De Enseñanza Técnico Profesional ( Liceo Laboratorio) (G. De E.)", "Profesor De Enseñanza Técnico Profesional (Enseñanza Preescolar, O, I Y Ii Ciclos ) (G. De E.)", "Profesor De Enseñanza Técnico Profesional (Iii Y Iv Ciclos, Enseñanza Especial Y Escuela Laboratorio) (G. De E.)", "Profesor De Enseñanza Tecnico Profesional Bilingue (Iii Ciclo, Educacion Diversificada O Enseñanza Especial)", "Profesor De Enseñanza Unidocente (I Y Ii Ciclos)", "Profesor De Idioma Extranjero ( I Y Ii Ciclos) (G.De E.)", "Subdirector De Colegio", "Supervisor De Educación", "Técnico De Servicio Civil 1 (G. De E.)", "Técnico De Servicio Civil 3 (G. De E.)", "Técnico En Informática 2 ( G.De E.)", "Trabajador Calificado De Servicio Civil 1 (G. De E.)"];
+
+    const ESPECIALIDADES = ["Administración / Generalista", "Administración De Recursos Humanos", "Administración Educativa", "Administración Y Operación Aduanera", "Agro Industria  Con Tecnología Agrícola", "Agroecología", "Animación 3D", "Artes Industriales", "Artes Plásticas/Artes Plásticas", "Asistencia Tecnica De Procesos Biotecnologicos En Laboratorio", "Automotriz", "Bilingual Accountig And Finance", "Biología", "Capacitación Y Desarrollo Educativo", "Ciberseguridad", "Ciencias", "Configuración Y Soporte De Redes De Comunicación Y Sistemas Operativos", "Construcción Civil", "Contabilidad", "Contabilidad Generalista", "Contabilidad Y Control Interno", "Contabilidad Y Costos", "Contabilidad Y Finanzas", "Coordinación Técnica Y Con La Empresa", "Curriculum", "Derecho", "Desarrollo Web", "Dibujo Técnico", "Dibujo Y Modelado Para Edificaciones", "Diseño De Instrumentos  Pedagógicos I, Ii, Iii Ciclos Y Educación Diversificada", "Diseño De Productos Industriales Textiles", "Diseño Generalista", "Diseño Gráfico Multimedia", "Diseño Publicitario", "Diseño Y Confección De Moda", "Diseño Y Desarrollo Digital", "Ecoturismo", "Educación Física", "Educación Para El Hogar", "Ejecutivo Comercial Y De Servicio Al Cliente", "Ejecutivo Para Centros De Servicio", "Electromecánica", "Electrónica Generalista", "Electrónica Industrial", "Enseñanza Especial  . Problemas De Aprendizaje", "Enseñanza Especial  . Terapia Del  Lenguaje", "Enseñanza Especial .  Generalista", "Enseñanza Especial .  Retardo Mental", "Enseñanza Especial . Atención Temprana", "Enseñanza Especial . Discapacidad Múltiple", "Enseñanza Especial . Trastornos Emocionales Y De Conducta", "Enseñanza Preescolar", "Equipos Interdisciplinarios / Orientación", "Equipos Interdisciplinarios / Psicología", "Español", "Estudios Sociales/Educación Cívica", "Evaluación", "Filosofía", "Física", "Francés", "Gestion De La Produccion", "Gtic / Gestion De Infraestructura", "Gtic / Ingenieria De Software", "Informática Educativa .Informática Para Iii Y Iv Ciclos", "Informática Educativa. Informática Para I Y Ii Ciclos", "Informática Empresarial", "Informática En Desarrollo Del Software", "Informática En Programación", "Informática En Redes De Computadoras", "Informática Generalista", "Ingeniería Civil", "Inglés", "Labores Varias De Oficina", "Matemáticas", "Mecánica De Precisión", "Mecánica General", "Mercadeo", "Música/Flauta Traversa", "Música/Instrumento De Percusión", "Música/Música", "Música/Saxofón", "Música/Violín", "Operaciones En Empresas De Alojamiento", "Organizacion De Operaciones Y Servicios En Alimentos Y Bebidas", "Procesos Industriales", "Procesos Productivos E Inspección En La Industria Alimentaria", "Producción Agrícola Y Pecuaria", "Psicología", "Química", "Refrigeración Y Aire Acondicionado", "Rehabilitación / Física", "Rehabilitación / Ocupacional", "Relaciones Internacionales", "Religión", "Reparación De Los Sistemas De Vehículos Livianos", "Salud Ocupacional", "Secretariado Ejecutivo", "Servicios Básicos", "Sin Especialidad T-I", "Sin Especialidad T-Ii"];
+
+    const VAC_PAGE_SIZE = 25;
+    let vacPage = 0;
+    let vacTotal = 0;
+
+    function initVacDropdowns() {
+      const regSel = $('vRegional');
+      if (regSel.options.length === 1) {
+        REGIONALES.forEach(r => {
+          const o = document.createElement('option');
+          o.value = r; o.textContent = r;
+          regSel.appendChild(o);
+        });
+      }
+      const cpSel = $('vClasePuesto');
+      if (cpSel.options.length === 1) {
+        CLASES_PUESTO.forEach(c => {
+          const o = document.createElement('option');
+          o.value = c; o.textContent = c;
+          cpSel.appendChild(o);
+        });
+      }
+      const espSel = $('vEspecialidad');
+      if (espSel.options.length === 1) {
+        ESPECIALIDADES.forEach(e => {
+          const o = document.createElement('option');
+          o.value = e; o.textContent = e;
+          espSel.appendChild(o);
+        });
+      }
+    }
+
+    function onVModeChange() {
+      const mode = $('vMode').value;
+      ['vMepIdWrap', 'vRegionalWrap', 'vClasePuestoWrap', 'vEspecialidadWrap', 'vInstitucionWrap', 'vFechaWrap']
+        .forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+      const map = {
+        mep_id: 'vMepIdWrap',
+        regional: 'vRegionalWrap',
+        clase_puesto: 'vClasePuestoWrap',
+        especialidad: 'vEspecialidadWrap',
+        institucion: 'vInstitucionWrap',
+        fecha_creacion: 'vFechaWrap'
+      };
+      if (map[mode]) $(map[mode]).style.display = 'block';
+    }
+
+    function ssv(s) {
+      ['v_idle', 'v_load', 'v_err', 'v_empty', 'v_res'].forEach(x => {
+        const el = $(x); if (!el) return;
+        el.style.display = 'none'; el.classList.remove('show');
+      });
+      const t = $(s);
+      if (!t) return;
+      if (s === 'v_err') t.classList.add('show');
+      else t.style.display = 'block';
+    }
+
+    function buildVacUrl(offset) {
+      const mode = $('vMode').value;
+      const base = SUPABASE_BASE_URL + '/rest/v1/vacantes';
+      const qs = new URLSearchParams();
+
+      if (mode === 'mep_id') {
+        const v = $('vMepId').value.trim();
+        if (!v) { toast('Ingresa el número de vacante', 'err'); return null; }
+        qs.set('mep_id', 'eq.' + v);
+      } else if (mode === 'regional') {
+        const v = $('vRegional').value;
+        if (!v) { toast('Selecciona una regional', 'err'); return null; }
+        const wildcarded = '*' + v.trim().split(/\s+/).join('*') + '*';
+        qs.set('regional', 'ilike.' + wildcarded);
+      } else if (mode === 'clase_puesto') {
+        const v = $('vClasePuesto').value;
+        if (!v) { toast('Selecciona una clase de puesto', 'err'); return null; }
+        qs.set('clase_puesto', 'eq.' + v);
+      } else if (mode === 'especialidad') {
+        const v = $('vEspecialidad').value;
+        if (!v) { toast('Selecciona una especialidad', 'err'); return null; }
+        qs.set('especialidad', 'eq.' + v);
+      } else if (mode === 'institucion') {
+        const v = $('vInstitucion').value.trim();
+        if (!v) { toast('Ingresa el nombre de la institución', 'err'); return null; }
+        qs.set('institucion', 'ilike.*' + v + '*');
+      } else if (mode === 'fecha_creacion') {
+        const v = $('vFecha').value;
+        if (!v) { toast('Selecciona una fecha', 'err'); return null; }
+        qs.set('bitacora_creacion', 'gte.' + v + 'T00:00:00-06:00');
+      }
+
+      qs.set('order', 'id.desc');
+      qs.set('limit', VAC_PAGE_SIZE);
+      qs.set('offset', offset);
+
+      return base + '?' + qs.toString();
+    }
+
+    async function runVacantes(resetPage) {
+      if (resetPage) { vacPage = 0; vacTotal = 0; }
+
+      const offset = vacPage * VAC_PAGE_SIZE;
+      const url = buildVacUrl(offset);
+      if (!url) return;
+
+      ssv('v_load');
+      $('vBtn').disabled = true;
+
+      try {
+        const r = await fetch(url, {
+          headers: Object.assign({}, HEADERS, { 'Prefer': 'count=exact' })
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + await r.text());
+
+        // Parse total count from Content-Range header
+        const cr = r.headers.get('Content-Range');
+        if (cr) {
+          const m = cr.match(/\/(\d+)$/);
+          if (m) vacTotal = parseInt(m[1]);
+        }
+
+        const data = await r.json();
+        if (!data.length && vacPage === 0) { ssv('v_empty'); return; }
+
+        renderVacantes(data);
+        ssv('v_res');
+      } catch (e) {
+        $('v_err').textContent = friendlyError(e);
+        ssv('v_err');
+      } finally {
+        $('vBtn').disabled = false;
+      }
+    }
+
+    function renderVacantes(rows) {
+      const cont = $('v_res');
+      const totalPages = Math.ceil(vacTotal / VAC_PAGE_SIZE) || 1;
+      const from = vacPage * VAC_PAGE_SIZE + 1;
+      const to = Math.min(vacPage * VAC_PAGE_SIZE + rows.length, vacTotal || (vacPage * VAC_PAGE_SIZE + rows.length));
+
+      // Pagination top
+      let pagHtml = buildPagHtml(vacPage, totalPages, from, to, vacTotal, 'filter');
+
+      // Table
+      let tableHtml = '<div class="vac-table-wrap"><table class="vac-table">' +
+        '<thead><tr>' +
+        '<th>MEP ID</th>' +
+        '<th>Vacante</th>' +
+        '<th>Clase de Puesto</th>' +
+        '<th>Especialidad</th>' +
+        '<th>Institución</th>' +
+        '<th>Regional</th>' +
+        '<th>Lecc.</th>' +
+        '<th>Rige</th>' +
+        '<th>Vence</th>' +
+        '<th>Creado</th>' +
+        '</tr></thead><tbody>';
+
+      rows.forEach(v => {
+        tableHtml +=
+          '<tr>' +
+          '<td><span class="vac-badge">' + esc(v.mep_id || '—') + '</span></td>' +
+          '<td>' + esc(v.vacante || '—') + '</td>' +
+          '<td style="font-size:12px;">' + esc(v.clase_puesto || '—') + '</td>' +
+          '<td style="font-size:12px;">' + esc(v.especialidad || '—') + '</td>' +
+          '<td style="font-size:12px;">' + esc(v.institucion || '—') + '</td>' +
+          '<td style="font-size:12px;">' + esc(v.regional || '—') + '</td>' +
+          '<td style="text-align:center;">' + (v.lecciones != null ? v.lecciones : '—') + '</td>' +
+          '<td style="white-space:nowrap;font-size:12px;">' + fmtDate(v.rige) + '</td>' +
+          '<td style="white-space:nowrap;font-size:12px;">' + fmtDate(v.vence) + '</td>' +
+          '<td style="white-space:nowrap;font-size:12px;">' + fmtDT(v.bitacora_creacion) + '</td>' +
+          '</tr>';
+      });
+
+      tableHtml += '</tbody></table></div>';
+
+      cont.innerHTML = pagHtml + tableHtml + buildPagHtml(vacPage, totalPages, from, to, vacTotal, 'filter');
+    }
+
+    function buildPagHtml(page, totalPages, from, to, total, context) {
+      const goFn = context === 'hoy' ? 'vacHoyGoPage' : 'vacGoPage';
+      const info = total ? (from + '–' + to + ' de ' + total) : (from + '–' + to);
+      let btns = '';
+
+      btns += '<button class="pag-btn" ' + (page === 0 ? 'disabled' : '') + ' onclick="' + goFn + '(' + (page - 1) + ')">‹ Ant</button>';
+
+      const start = Math.max(0, page - 2);
+      const end = Math.min(totalPages - 1, page + 2);
+      if (start > 0) btns += '<button class="pag-btn" onclick="' + goFn + '(0)">1</button>' + (start > 1 ? '<span style="color:var(--muted);padding:0 4px;font-size:13px;">…</span>' : '');
+      for (let i = start; i <= end; i++) {
+        btns += '<button class="pag-btn' + (i === page ? ' active' : '') + '" onclick="' + goFn + '(' + i + ')">' + (i + 1) + '</button>';
+      }
+      if (end < totalPages - 1) btns += (end < totalPages - 2 ? '<span style="color:var(--muted);padding:0 4px;font-size:13px;">…</span>' : '') + '<button class="pag-btn" onclick="' + goFn + '(' + (totalPages - 1) + ')">' + totalPages + '</button>';
+
+      btns += '<button class="pag-btn" ' + (page >= totalPages - 1 ? 'disabled' : '') + ' onclick="' + goFn + '(' + (page + 1) + ')">Sig ›</button>';
+
+      return '<div class="pag-bar"><span class="pag-info">' + info + '</span><div class="pag-btns">' + btns + '</div></div>';
+    }
+
+    function vacGoPage(p) {
+      vacPage = p;
+      runVacantes(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function vacHoyGoPage(p) {
+      vacPage = p;
+      runVacantesRapido('hoy', p);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function esc(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    async function runVacantesRapido(tipo) {
+      const endpoint = tipo === 'notificadas' ? 'vacantes_hoy_notificadas' : 'vacantes_hoy';
+      const label = tipo === 'notificadas' ? 'Notificadas hoy' : 'Hoy';
+      const btnId = tipo === 'notificadas' ? 'vNotifBtn' : 'vHoyBtn';
+
+      // vacantes_hoy supports pagination; vacantes_hoy_notificadas is a view without fecha_notificacion so just order by id.desc
+      const isPaged = tipo === 'hoy';
+      if (isPaged && arguments[1] !== undefined) vacPage = arguments[1];
+      else if (isPaged && arguments[1] === undefined) { /* keep current vacPage */ }
+
+      const offset = isPaged ? vacPage * VAC_PAGE_SIZE : 0;
+      let urlParams = 'order=id.desc';
+      if (isPaged) urlParams += '&limit=' + VAC_PAGE_SIZE + '&offset=' + offset;
+
+      const url = SUPABASE_BASE_URL + '/rest/v1/' + endpoint + '?' + urlParams;
+
+      ssv('v_load');
+      $(btnId).disabled = true;
+
+      try {
+        const r = await fetch(url, {
+          headers: Object.assign({}, HEADERS, { 'Prefer': 'count=exact' })
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + await r.text());
+
+        const cr = r.headers.get('Content-Range');
+        if (isPaged) {
+          vacTotal = 0;
+          if (cr) { const m = cr.match(/\/(\d+)$/); if (m) vacTotal = parseInt(m[1]); }
+        }
+
+        const data = await r.json();
+        if (!data.length && (!isPaged || vacPage === 0)) { ssv('v_empty'); return; }
+
+        const cont = $('v_res');
+
+        let tableHtml = '';
+        if (isPaged) {
+          const totalPages = Math.ceil(vacTotal / VAC_PAGE_SIZE) || 1;
+          const from = vacPage * VAC_PAGE_SIZE + 1;
+          const to = Math.min(vacPage * VAC_PAGE_SIZE + data.length, vacTotal || (vacPage * VAC_PAGE_SIZE + data.length));
+          tableHtml += buildPagHtml(vacPage, totalPages, from, to, vacTotal, 'hoy');
+        } else {
+          tableHtml += '<p class="count-line">' + data.length + ' vacante' + (data.length !== 1 ? 's' : '') + ' · ' + label + '</p>';
+        }
+
+        if (tipo === 'notificadas') {
+          tableHtml += '<div class="vac-card-grid">';
+
+          data.forEach(v => {
+            tableHtml +=
+              '<div class="vac-card">' +
+              '<div class="vac-card-header">' +
+              '<div class="vac-card-title">' + esc(v.clase_puesto || '—') + '</div>' +
+              '<div class="vac-card-mep">#' + esc(v.mep_id || '—') + '</div>' +
+              '</div>' +
+              '<div class="vac-card-body">' +
+              '<div class="vac-card-row">' +
+              '<span class="vac-card-icon">📍</span>' +
+              '<span class="vac-card-val">' + esc(v.regional || '—') + '</span>' +
+              '</div>' +
+              '<div class="vac-card-row">' +
+              '<span class="vac-card-icon">🏢</span>' +
+              '<span class="vac-card-val" style="font-weight:500;">' + esc(v.institucion || '—') + '</span>' +
+              '</div>' +
+              '<div class="vac-card-row">' +
+              '<span class="vac-card-icon">🎓</span>' +
+              '<span class="vac-card-val">' + esc(v.especialidad || '—') + '</span>' +
+              '</div>' +
+              '</div>' +
+              '<div class="vac-card-footer">' +
+              '<div class="vac-card-client-info">' +
+              '<div class="vac-card-client-name">' + esc(v.cliente_nombre || '—') + '</div>' +
+              (v.lecciones != null ? '<div class="vac-card-lecciones">' + v.lecciones + ' lecc.</div>' : '') +
+              '</div>' +
+              '<div class="vac-card-client-email">' + esc(v.cliente_email || '') + '</div>' +
+              '<div class="vac-card-times">' +
+              '<span>📅 ' + fmtCR(v.fecha_creacion_cr) + '</span>' +
+              '<span>📧 ' + fmtCR(v.fecha_notificacion_cr) + '</span>' +
+              '</div>' +
+              '</div>' +
+              '</div>';
+          });
+
+          tableHtml += '</div>';
+        } else {
+          tableHtml += '<div class="vac-table-wrap"><table class="vac-table">' +
+            '<thead><tr>' +
+            '<th>MEP ID</th><th>Vacante</th><th>Clase de Puesto</th><th>Especialidad</th>' +
+            '<th>Institución</th><th>Regional</th><th>Lecc.</th><th>Rige</th><th>Vence</th><th>Creado</th>' +
+            '</tr></thead><tbody>';
+
+          data.forEach(v => {
+            tableHtml +=
+              '<tr>' +
+              '<td><span class="vac-badge">' + esc(v.mep_id || '—') + '</span></td>' +
+              '<td>' + esc(v.vacante || '—') + '</td>' +
+              '<td style="font-size:12px;">' + esc(v.clase_puesto || '—') + '</td>' +
+              '<td style="font-size:12px;">' + esc(v.especialidad || '—') + '</td>' +
+              '<td style="font-size:12px;">' + esc(v.institucion || '—') + '</td>' +
+              '<td style="font-size:12px;">' + esc(v.regional || '—') + '</td>' +
+              '<td style="text-align:center;">' + (v.lecciones != null ? v.lecciones : '—') + '</td>' +
+              '<td style="white-space:nowrap;font-size:12px;">' + fmtDate(v.rige) + '</td>' +
+              '<td style="white-space:nowrap;font-size:12px;">' + fmtDate(v.vence) + '</td>' +
+              '<td style="white-space:nowrap;font-size:12px;">' + fmtDT(v.bitacora_creacion) + '</td>' +
+              '</tr>';
+          });
+
+          tableHtml += '</tbody></table></div>';
+        }
+        if (isPaged) {
+          const totalPages = Math.ceil(vacTotal / VAC_PAGE_SIZE) || 1;
+          const from = vacPage * VAC_PAGE_SIZE + 1;
+          const to = Math.min(vacPage * VAC_PAGE_SIZE + data.length, vacTotal || (vacPage * VAC_PAGE_SIZE + data.length));
+          tableHtml += buildPagHtml(vacPage, totalPages, from, to, vacTotal, 'hoy');
+        }
+
+        cont.innerHTML = tableHtml;
+        ssv('v_res');
+      } catch (e) {
+        $('v_err').textContent = friendlyError(e);
+        ssv('v_err');
+      } finally {
+        $(btnId).disabled = false;
+      }
+    }
+
+    // ── INIT ──────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      // restore theme
+      try {
+        const saved = localStorage.getItem('theme');
+        if (saved) {
+          document.documentElement.dataset.theme = saved;
+          $('themeBtn').textContent = saved === 'dark' ? '☀' : '☾';
+        }
+      } catch (e) { }
+
+      // build regions
+      renderRegions();
+      updateRegCount();
+
+      // build vacantes dropdowns
+      initVacDropdowns();
+    });
+  </script>
+</body>
+
+</html>

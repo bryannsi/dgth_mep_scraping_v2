@@ -1,4 +1,4 @@
-﻿import fs from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
 import { CONFIG } from "./config/config.js";
 import { formatDuration } from "./helpers/helpers.js";
@@ -6,6 +6,7 @@ import { scrapeVacantesMEP } from "./scrapers/scraper.js";
 import { DbService } from "./services/dbService.js";
 import { jsonExport } from "./services/exportService.js";
 import { logger } from "./services/loggerService.js";
+import { NotificationFactory } from "./services/factories/NotificationFactory.js";
 import { NotificationService } from "./services/notificationService.js";
 import { TemplateService } from "./services/templateService.js";
 
@@ -21,11 +22,10 @@ async function main() {
   // Indicar si estamos corriendo en desarrollo o producción
   logger.info(`🔧 Modo: ${CONFIG.isProd ? "PRODUCCIÓN" : "DESARROLLO"}`);
 
-  // 1. Inicializar los servicios que se usarán en todo el flujo. El
-  //    templateService decide qué configuración de plantillas usar según
-  //    NODE_ENV y es necesario para las notificaciones.
+  // 1. Inicializar los servicios que se usarán en todo el flujo.
   const templateService = new TemplateService();
-  const notificationService = new NotificationService(templateService);
+  const notificationFactory = new NotificationFactory(templateService);
+  const notificationService = new NotificationService(notificationFactory);
 
   try {
     // 1. Obtener clientes autorizados (una sola vez para todo el flujo)

@@ -104,12 +104,13 @@ export class DbService {
   }
 
   /**
-   * Obtiene las vacantes que no han sido notificadas para un template específico,
+   * Obtiene las vacantes que no han sido notificadas para un template y CANAL específico,
    * limitando la búsqueda a las últimas 24 horas (excluye vacantes vencidas).
    * @param {string} templateName - Nombre del template (ej: "template1").
+   * @param {string} channel - Nombre del canal (email, telegram, etc.)
    * @returns {Promise<Array>} - Lista de objetos Vacancy.
    */
-  static async getPendingVacanciesByTemplate(templateName) {
+  static async getPendingVacanciesByTemplate(templateName, channel = "email") {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     return await prisma.vacancy.findMany({
@@ -121,6 +122,7 @@ export class DbService {
           notificationLogs: {
             some: {
               template: templateName,
+              channel: channel,
             },
           },
         },
@@ -132,9 +134,16 @@ export class DbService {
    * Registra masivamente las notificaciones enviadas en la bitácora.
    * @param {string} templateName - Nombre del template.
    * @param {Array} vacancies - Lista de vacantes notificadas.
+   * @param {string} channel - Nombre del canal (email, telegram, etc.)
+   * @param {string} providerId - ID retornado por el proveedor (Resend ID, TG Msg ID, etc.)
    * @returns {Promise<Object>} - Resultado de la operación createMany.
    */
-  static async logNotifications(templateName, vacancies, resendId = null) {
+  static async logNotifications(
+    templateName,
+    vacancies,
+    channel = "email",
+    providerId = null,
+  ) {
     if (!vacancies?.length) return { count: 0 };
 
     return await prisma.notificationLog.createMany({
@@ -142,7 +151,8 @@ export class DbService {
         vacanteId: v.id,
         mepId: v.mepId,
         template: templateName,
-        resendId: resendId,
+        channel: channel,
+        providerId: providerId,
       })),
       skipDuplicates: true,
     });

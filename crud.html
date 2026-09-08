@@ -160,6 +160,10 @@
       margin: 0 auto;
     }
 
+    .inner:has(.vac-card-grid) {
+      max-width: none;
+    }
+
     /* ── INPUTS ── */
     .inp {
       width: 100%;
@@ -607,9 +611,39 @@
     /* ── VACANTE CARDS ── */
     .vac-card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
       margin-top: 12px;
+    }
+
+    @media (max-width: 479px) {
+      .vac-card-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (min-width: 480px) {
+      .vac-card-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 768px) {
+      .vac-card-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .vac-card-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+    }
+
+    @media (min-width: 1400px) {
+      .vac-card-grid {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
     }
 
     .vac-card {
@@ -1086,6 +1120,93 @@
       color: var(--danger);
     }
 
+    /* ── MODAL ── */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, .5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .modal-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 16px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-body iframe {
+      width: 100%;
+      height: 500px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .modal-body .email-error {
+      text-align: center;
+      color: var(--muted);
+      padding: 32px;
+    }
+
+    .modal-body .email-meta {
+      margin-bottom: 12px;
+      padding: 12px;
+      background: var(--subtle);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .modal-body .email-meta div {
+      margin: 4px 0;
+    }
+
     #qIdWrap,
     #qEmailWrap,
     #qNombreWrap {
@@ -1487,6 +1608,20 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <div id="vacDetailModal" class="modal" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Detalle de Notificación</h3>
+        <button class="modal-close" onclick="closeVacDetailModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="spin-wrap">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     // ─── CONFIG ──────────────────────────────
@@ -2403,56 +2538,235 @@
     }
 
     function buildPagHtml(page, totalPages, from, to, total, context) {
-      const goFn = context === 'hoy' ? 'vacHoyGoPage' : 'vacGoPage';
       const info = total ? (from + '–' + to + ' de ' + total) : (from + '–' + to);
       let btns = '';
 
-      btns += '<button class="pag-btn" ' + (page === 0 ? 'disabled' : '') + ' onclick="' + goFn + '(' + (page - 1) + ')">‹ Ant</button>';
+      btns += '<button class="pag-btn" ' + (page === 0 ? 'disabled' : '') + ' onclick="vacGoPage(' + (page - 1) + ',\'' + context + '\')">‹ Ant</button>';
 
       const start = Math.max(0, page - 2);
       const end = Math.min(totalPages - 1, page + 2);
-      if (start > 0) btns += '<button class="pag-btn" onclick="' + goFn + '(0)">1</button>' + (start > 1 ? '<span style="color:var(--muted);padding:0 4px;font-size:13px;">…</span>' : '');
+      if (start > 0) btns += '<button class="pag-btn" onclick="vacGoPage(0,\'' + context + '\')">1</button>' + (start > 1 ? '<span style="color:var(--muted);padding:0 4px;font-size:13px;">…</span>' : '');
       for (let i = start; i <= end; i++) {
-        btns += '<button class="pag-btn' + (i === page ? ' active' : '') + '" onclick="' + goFn + '(' + i + ')">' + (i + 1) + '</button>';
+        btns += '<button class="pag-btn' + (i === page ? ' active' : '') + '" onclick="vacGoPage(' + i + ',\'' + context + '\')">' + (i + 1) + '</button>';
       }
-      if (end < totalPages - 1) btns += (end < totalPages - 2 ? '<span style="color:var(--muted);padding:0 4px;font-size:13px;">…</span>' : '') + '<button class="pag-btn" onclick="' + goFn + '(' + (totalPages - 1) + ')">' + totalPages + '</button>';
+      if (end < totalPages - 1) btns += (end < totalPages - 2 ? '<span style="color:var(--muted);padding:0 4px;font-size:13px;">…</span>' : '') + '<button class="pag-btn" onclick="vacGoPage(' + (totalPages - 1) + ',\'' + context + '\')">' + totalPages + '</button>';
 
-      btns += '<button class="pag-btn" ' + (page >= totalPages - 1 ? 'disabled' : '') + ' onclick="' + goFn + '(' + (page + 1) + ')">Sig ›</button>';
+      btns += '<button class="pag-btn" ' + (page >= totalPages - 1 ? 'disabled' : '') + ' onclick="vacGoPage(' + (page + 1) + ',\'' + context + '\')">Sig ›</button>';
 
       return '<div class="pag-bar"><span class="pag-info">' + info + '</span><div class="pag-btns">' + btns + '</div></div>';
-    }
-
-    function vacGoPage(p) {
-      vacPage = p;
-      runVacantes(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function vacHoyGoPage(p) {
-      vacPage = p;
-      runVacantesRapido('hoy', p);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function esc(str) {
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    async function runVacantesRapido(tipo) {
+    const VAC_CARD_CONFIGS = {
+      notificadas: {
+        header: [{ key: 'clase_puesto' }, { key: 'mep_id', badge: true }],
+        body: [
+          { key: 'regional', icon: '📍' },
+          { key: 'institucion', icon: '🏢', bold: true },
+          { key: 'especialidad', icon: '🎓' }
+        ],
+        footerMeta: [
+          { key: 'cliente_nombre' },
+          { key: 'lecciones', badgeOk: true, suffix: ' lecc.' },
+          { key: 'cliente_email', muted: true }
+        ],
+        footerTimes: [
+          { key: 'fecha_creacion_cr', icon: '📅', fmt: fmtCR },
+          { key: 'fecha_notificacion_cr', icon: '📧', fmt: fmtCR }
+        ],
+        clickable: true,
+        clickKey: 'provider_id',
+        channelKey: 'channel'
+      },
+      hoy: {
+        header: [{ key: 'clase_puesto' }, { key: 'mep_id', badge: true }],
+        body: [
+          { key: 'regional', icon: '📍' },
+          { key: 'institucion', icon: '🏢', bold: true },
+          { key: 'especialidad', icon: '🎓' }
+        ],
+        footerMeta: [
+          { key: 'lecciones', badgeOk: true, suffix: ' lecc.' }
+        ],
+        footerTimes: [
+          { key: 'bitacora_creacion', icon: '📅', fmt: fmtDT }
+        ]
+      }
+    };
+
+    function buildVacCardHtml(data, config) {
+      const onclick = config.clickable ? 'onclick="handleVacCardClick(this, \'' + data[config.clickKey] + '\', \'' + data[config.channelKey] + '\')"' : '';
+      const cursor = config.clickable ? ' style="cursor:pointer;"' : '';
+      let html = '<div class="vac-card"' + cursor + ' ' + onclick + ' data-id="' + esc(data.id) + '">';
+
+      if (config.header && config.header.length) {
+        html += '<div class="vac-card-header">';
+        config.header.forEach(f => {
+          const val = data[f.key] != null ? data[f.key] : '—';
+          if (f.badge) {
+            html += '<div class="vac-card-mep">#' + esc(val) + '</div>';
+          } else {
+            html += '<div class="vac-card-title">' + esc(val) + '</div>';
+          }
+        });
+        html += '</div>';
+      }
+
+      if (config.body && config.body.length) {
+        html += '<div class="vac-card-body">';
+        config.body.forEach(f => {
+          const rawVal = data[f.key];
+          const val = rawVal != null ? rawVal : '—';
+          const displayVal = f.fmt ? f.fmt(val) : esc(val);
+          const valClass = f.bold ? ' style="font-weight:500;"' : '';
+          html += '<div class="vac-card-row">' +
+            (f.icon ? '<span class="vac-card-icon">' + f.icon + '</span>' : '') +
+            '<span class="vac-card-val"' + valClass + '>' + displayVal + '</span>' +
+            (f.suffix ? '<span>' + f.suffix + '</span>' : '') +
+            '</div>';
+        });
+        html += '</div>';
+      }
+
+      if (config.footerMeta && config.footerMeta.length) {
+        html += '<div class="vac-card-footer">';
+        const metaItems = config.footerMeta.filter(f => !f.muted);
+        if (metaItems.length) {
+          html += '<div class="vac-card-client-info">';
+          metaItems.forEach(f => {
+            const val = data[f.key] != null ? data[f.key] : '—';
+            if (f.badgeOk) {
+              html += '<div class="vac-card-lecciones">' + esc(val) + (f.suffix || '') + '</div>';
+            } else {
+              html += '<div class="vac-card-client-name">' + esc(val) + '</div>';
+            }
+          });
+          html += '</div>';
+        }
+        const emailItem = config.footerMeta.find(f => f.muted);
+        if (emailItem) {
+          const val = data[emailItem.key] != null ? data[emailItem.key] : '';
+          html += '<div class="vac-card-client-email">' + esc(val) + '</div>';
+        }
+
+        if (config.footerTimes && config.footerTimes.length) {
+          html += '<div class="vac-card-times">';
+          config.footerTimes.forEach(f => {
+            const val = data[f.key] != null ? data[f.key] : '—';
+            const displayVal = f.fmt ? f.fmt(val) : esc(val);
+            html += '<span>' + (f.icon || '') + ' ' + displayVal + '</span>';
+          });
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    function renderVacCards(data, tipo) {
+      const config = VAC_CARD_CONFIGS[tipo];
+      let html = '<div class="vac-card-grid">';
+      data.forEach(v => { html += buildVacCardHtml(v, config); });
+      html += '</div>';
+      return html;
+    }
+
+    function handleVacCardClick(el, providerId, channel) {
+      if (channel === 'email' && providerId) {
+        openVacDetailModal(providerId);
+      }
+    }
+
+    function openVacDetailModal(providerId) {
+      const modal = $('vacDetailModal');
+      const modalBody = $('modalBody');
+      modal.style.display = 'flex';
+      modalBody.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+      fetchResendEmail(providerId);
+    }
+
+    function closeVacDetailModal() {
+      $('vacDetailModal').style.display = 'none';
+    }
+
+    $('vacDetailModal').addEventListener('click', function (e) {
+      if (e.target === this) closeVacDetailModal();
+    });
+
+    async function fetchResendEmail(providerId) {
+      const modalBody = $('modalBody');
+      try {
+        const r = await fetch(SUPABASE_BASE_URL + '/functions/v1/get-resend-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_API_KEY}`
+          },
+          body: JSON.stringify({ providerId })
+        });
+        if (!r.ok) {
+          let errMsg = 'Error ' + r.status;
+          if (r.status === 401) errMsg = 'Error de autenticación';
+          else if (r.status === 404) errMsg = 'Email no encontrado';
+          modalBody.innerHTML = '<div class="email-error">' + errMsg + '</div>';
+          return;
+        }
+        const email = await r.json();
+        if (email.error) {
+          modalBody.innerHTML = '<div class="email-error">' + esc(email.error) + '</div>';
+          return;
+        }
+        if (email.id !== providerId) {
+          modalBody.innerHTML = '<div class="email-error">ID de email no coincide</div>';
+          return;
+        }
+        const unescapedHtml = email.html
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&#x27;/g, "'")
+          .replace(/&#x2F;/g, '/');
+        modalBody.innerHTML = '<div class="email-meta">' +
+          '<div><strong>Para:</strong> ' + esc(email.to.map(t => t.email).join(', ')) + '</div>' +
+          '<div><strong>De:</strong> ' + esc(email.from) + '</div>' +
+          '<div><strong>Asunto:</strong> ' + esc(email.subject) + '</div>' +
+          '</div>' +
+          '<iframe srcdoc="' + esc(unescapedHtml) + '" sandbox="allow-same-origin"></iframe>';
+      } catch (e) {
+        console.error(e);
+        modalBody.innerHTML = '<div class="email-error">Error al cargar el email: ' + esc(e.message) + '</div>';
+      }
+    }
+
+    function getVacPaginationInfo(total, page, pageSize, dataLength) {
+      const totalPages = Math.ceil(total / pageSize) || 1;
+      const from = page * pageSize + 1;
+      const to = Math.min(page * pageSize + dataLength, total || (page * pageSize + dataLength));
+      return { totalPages, from, to };
+    }
+
+    function vacGoPage(p, tipo) {
+      vacPage = p;
+      runVacantesRapido(tipo, p);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function runVacantesRapido(tipo, page) {
       const endpoint = tipo === 'notificadas' ? 'vacantes_hoy_notificadas' : 'vacantes_hoy';
       const label = tipo === 'notificadas' ? 'Notificadas hoy' : 'Hoy';
       const btnId = tipo === 'notificadas' ? 'vNotifBtn' : 'vHoyBtn';
 
-      // vacantes_hoy supports pagination; vacantes_hoy_notificadas is a view without fecha_notificacion so just order by id.desc
-      const isPaged = tipo === 'hoy';
-      if (isPaged && arguments[1] !== undefined) vacPage = arguments[1];
-      else if (isPaged && arguments[1] === undefined) { /* keep current vacPage */ }
+      if (page !== undefined) vacPage = page;
 
-      const offset = isPaged ? vacPage * VAC_PAGE_SIZE : 0;
-      let urlParams = 'order=id.desc';
-      if (isPaged) urlParams += '&limit=' + VAC_PAGE_SIZE + '&offset=' + offset;
-
-      const url = SUPABASE_BASE_URL + '/rest/v1/' + endpoint + '?' + urlParams;
+      const offset = vacPage * VAC_PAGE_SIZE;
+      const url = SUPABASE_BASE_URL + '/rest/v1/' + endpoint + '?order=id.desc&limit=' + VAC_PAGE_SIZE + '&offset=' + offset;
 
       ssv('v_load');
       $(btnId).disabled = true;
@@ -2464,98 +2778,22 @@
         if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + await r.text());
 
         const cr = r.headers.get('Content-Range');
-        if (isPaged) {
-          vacTotal = 0;
-          if (cr) { const m = cr.match(/\/(\d+)$/); if (m) vacTotal = parseInt(m[1]); }
-        }
+        vacTotal = 0;
+        if (cr) { const m = cr.match(/\/(\d+)$/); if (m) vacTotal = parseInt(m[1]); }
 
         const data = await r.json();
-        if (!data.length && (!isPaged || vacPage === 0)) { ssv('v_empty'); return; }
+        if (!data.length && vacPage === 0) { ssv('v_empty'); return; }
+        if (!data.length) { vacPage--; runVacantesRapido(tipo); return; }
 
         const cont = $('v_res');
+        const { totalPages, from, to } = getVacPaginationInfo(vacTotal, vacPage, VAC_PAGE_SIZE, data.length);
 
-        let tableHtml = '';
-        if (isPaged) {
-          const totalPages = Math.ceil(vacTotal / VAC_PAGE_SIZE) || 1;
-          const from = vacPage * VAC_PAGE_SIZE + 1;
-          const to = Math.min(vacPage * VAC_PAGE_SIZE + data.length, vacTotal || (vacPage * VAC_PAGE_SIZE + data.length));
-          tableHtml += buildPagHtml(vacPage, totalPages, from, to, vacTotal, 'hoy');
-        } else {
-          tableHtml += '<p class="count-line">' + data.length + ' vacante' + (data.length !== 1 ? 's' : '') + ' · ' + label + '</p>';
-        }
+        let html = buildPagHtml(vacPage, totalPages, from, to, vacTotal, tipo);
+        html += '<p class="count-line">' + data.length + ' vacante' + (data.length !== 1 ? 's' : '') + ' · ' + label + '</p>';
+        html += renderVacCards(data, tipo);
+        html += buildPagHtml(vacPage, totalPages, from, to, vacTotal, tipo);
 
-        if (tipo === 'notificadas') {
-          tableHtml += '<div class="vac-card-grid">';
-
-          data.forEach(v => {
-            tableHtml +=
-              '<div class="vac-card">' +
-              '<div class="vac-card-header">' +
-              '<div class="vac-card-title">' + esc(v.clase_puesto || '—') + '</div>' +
-              '<div class="vac-card-mep">#' + esc(v.mep_id || '—') + '</div>' +
-              '</div>' +
-              '<div class="vac-card-body">' +
-              '<div class="vac-card-row">' +
-              '<span class="vac-card-icon">📍</span>' +
-              '<span class="vac-card-val">' + esc(v.regional || '—') + '</span>' +
-              '</div>' +
-              '<div class="vac-card-row">' +
-              '<span class="vac-card-icon">🏢</span>' +
-              '<span class="vac-card-val" style="font-weight:500;">' + esc(v.institucion || '—') + '</span>' +
-              '</div>' +
-              '<div class="vac-card-row">' +
-              '<span class="vac-card-icon">🎓</span>' +
-              '<span class="vac-card-val">' + esc(v.especialidad || '—') + '</span>' +
-              '</div>' +
-              '</div>' +
-              '<div class="vac-card-footer">' +
-              '<div class="vac-card-client-info">' +
-              '<div class="vac-card-client-name">' + esc(v.cliente_nombre || '—') + '</div>' +
-              (v.lecciones != null ? '<div class="vac-card-lecciones">' + v.lecciones + ' lecc.</div>' : '') +
-              '</div>' +
-              '<div class="vac-card-client-email">' + esc(v.cliente_email || '') + '</div>' +
-              '<div class="vac-card-times">' +
-              '<span>📅 ' + fmtCR(v.fecha_creacion_cr) + '</span>' +
-              '<span>📧 ' + fmtCR(v.fecha_notificacion_cr) + '</span>' +
-              '</div>' +
-              '</div>' +
-              '</div>';
-          });
-
-          tableHtml += '</div>';
-        } else {
-          tableHtml += '<div class="vac-table-wrap"><table class="vac-table">' +
-            '<thead><tr>' +
-            '<th>MEP ID</th><th>Vacante</th><th>Clase de Puesto</th><th>Especialidad</th>' +
-            '<th>Institución</th><th>Regional</th><th>Lecc.</th><th>Rige</th><th>Vence</th><th>Creado</th>' +
-            '</tr></thead><tbody>';
-
-          data.forEach(v => {
-            tableHtml +=
-              '<tr>' +
-              '<td><span class="vac-badge">' + esc(v.mep_id || '—') + '</span></td>' +
-              '<td>' + esc(v.vacante || '—') + '</td>' +
-              '<td style="font-size:12px;">' + esc(v.clase_puesto || '—') + '</td>' +
-              '<td style="font-size:12px;">' + esc(v.especialidad || '—') + '</td>' +
-              '<td style="font-size:12px;">' + esc(v.institucion || '—') + '</td>' +
-              '<td style="font-size:12px;">' + esc(v.regional || '—') + '</td>' +
-              '<td style="text-align:center;">' + (v.lecciones != null ? v.lecciones : '—') + '</td>' +
-              '<td style="white-space:nowrap;font-size:12px;">' + fmtDate(v.rige) + '</td>' +
-              '<td style="white-space:nowrap;font-size:12px;">' + fmtDate(v.vence) + '</td>' +
-              '<td style="white-space:nowrap;font-size:12px;">' + fmtDT(v.bitacora_creacion) + '</td>' +
-              '</tr>';
-          });
-
-          tableHtml += '</tbody></table></div>';
-        }
-        if (isPaged) {
-          const totalPages = Math.ceil(vacTotal / VAC_PAGE_SIZE) || 1;
-          const from = vacPage * VAC_PAGE_SIZE + 1;
-          const to = Math.min(vacPage * VAC_PAGE_SIZE + data.length, vacTotal || (vacPage * VAC_PAGE_SIZE + data.length));
-          tableHtml += buildPagHtml(vacPage, totalPages, from, to, vacTotal, 'hoy');
-        }
-
-        cont.innerHTML = tableHtml;
+        cont.innerHTML = html;
         ssv('v_res');
       } catch (e) {
         $('v_err').textContent = friendlyError(e);

@@ -13,6 +13,7 @@
     "build": "pnpm prisma generate && node -e \"import('fs').then(fs => fs.rmSync('build', { recursive: true, force: true }))\" && node build.js",
     "test": "node --test tests/dateParsing.test.js",
 	"postinstall": "puppeteer browsers install chrome"
+    "scrape-nombramiento": "node src/run_nombramientos.js"
   },
   "keywords": [],
   "author": "Bryan Chavarría Hughes",

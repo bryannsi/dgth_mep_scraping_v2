@@ -15,6 +15,17 @@ export async function scrapeNombramientoMEP(mepId, year) {
   // Set window size to ensure elements are visible
   await page.setViewport({ width: 1280, height: 800 });
 
+  let alertMessage = null;
+  page.on("dialog", async (dialog) => {
+    alertMessage = dialog.message();
+    logger.info(`Alerta web detectada para vacante ${mepId}: "${alertMessage}"`);
+    try {
+      await dialog.accept();
+    } catch {
+      // Si ya fue manejado o cerrado, ignorar
+    }
+  });
+
   try {
     logger.info(`Navegando al sitio de nombramientos para consultar vacante ${mepId} en el año ${year}`);
     await page.goto("https://apps.mep.go.cr/consultanombramientos/", { waitUntil: "networkidle2" });
@@ -43,25 +54,42 @@ export async function scrapeNombramientoMEP(mepId, year) {
     // Click consultar y esperar
     await page.click("#btnConsultar");
     
-    // Espera adaptativa por la respuesta (ya sea la tabla o un mensaje de que no hay datos)
-    // Usualmente los UpdatePanels reemplazan DOM o inyectan HTML
-    await new Promise(r => setTimeout(r, 2000));
-    try {
-      await page.waitForFunction(
-        () => {
-          const hasTable = document.querySelector("#grvNombramientos") !== null;
-          const bodyText = document.body.innerText;
-          const hasNoDataMessage = bodyText.includes("No se encontraron") || bodyText.includes("no produjo resultados");
-          return hasTable || hasNoDataMessage;
-        },
-        { timeout: 10000 }
-      );
-    } catch (e) {
-      logger.warn(`Timeout esperando respuesta del panel para vacante ${mepId}. Es posible que no haya tabla.`);
+    // Espera adaptativa por la respuesta (ya sea la tabla, alerta recibida o un mensaje de que no hay datos)
+    // Revisamos periódicamente en lugar de un waitForFunction largo si ya saltó la alerta
+    const maxWaitMs = 6000;
+    const intervalMs = 250;
+    let waitedMs = 0;
+
+    while (waitedMs < maxWaitMs) {
+      if (alertMessage) {
+        // La alerta ya confirmó que no hay registros o hubo un aviso
+        break;
+      }
+
+      const hasTable = await page.$("#grvNombramientos") !== null;
+      if (hasTable) {
+        break;
+      }
+
+      const hasNoDataMessage = await page.evaluate(() => {
+        const bodyText = document.body ? document.body.innerText : "";
+        return (
+          bodyText.includes("No se encontraron") ||
+          bodyText.includes("no produjo resultados") ||
+          bodyText.includes("no existan")
+        );
+      });
+
+      if (hasNoDataMessage) {
+        break;
+      }
+
+      await new Promise((r) => setTimeout(r, intervalMs));
+      waitedMs += intervalMs;
     }
 
     // Comprobar existencia de la tabla
-    const hasTable = await page.$("#grvNombramientos") !== null;
+    const hasTable = (await page.$("#grvNombramientos")) !== null;
     
     if (!hasTable) {
       logger.info(`No se encontró la tabla de nombramientos para la vacante ${mepId} en ${year}.`);

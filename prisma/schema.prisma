@@ -20,6 +20,7 @@ model Vacancy {
   bitacoraCreacion DateTime @default(now()) @map("bitacora_creacion") @db.Timestamptz
 
   notificationLogs NotificationLog[]
+  nombramiento     Nombramiento?
 
   @@unique([mepId, regional, clasePuesto, rige, lecciones])
   @@index([bitacoraCreacion], name: "idx_vacantes_bitacora_creacion")
@@ -82,4 +83,35 @@ model Payment {
   client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@map("pagos")
+}
+
+model Persona {
+  cedula        String          @id @db.Text
+  nombre        String          @db.Text
+  nombramientos Nombramiento[]
+
+  @@map("personas")
+}
+
+model Nombramiento {
+  id                     Int       @id @default(autoincrement())
+  personaCedula          String    @map("persona_cedula") @db.Text
+  vacanteId              Int       @unique @map("vacante_id")
+  anio                   Int       @default(2026) @map("anio")
+  institucion            String?   @db.Text
+  clasePuesto            String?   @map("clase_puesto") @db.Text
+  especialidad           String?   @db.Text
+  grupo                  String?   @db.Text
+  numeroPuesto           String?   @map("numero_puesto") @db.Text
+  rige                   DateTime? @db.Date
+  vence                  DateTime? @db.Date
+  estado                 String?   @db.Text
+  calificacionElegibles  String?   @map("calificacion_elegibles") @db.Text
+  tituloNomina           String?   @map("titulo_nomina") @db.Text
+  fechaScraping          DateTime  @default(now()) @map("fecha_scraping") @db.Timestamptz
+
+  persona                Persona   @relation(fields: [personaCedula], references: [cedula], onDelete: Cascade)
+  vacancy                Vacancy   @relation(fields: [vacanteId], references: [id], onDelete: Cascade)
+
+  @@map("nombramientos")
 }
